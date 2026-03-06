@@ -137,7 +137,7 @@ application.yaml (padrão do projeto)
 application-local.yaml (local, no .gitignore)
 application.example.yaml (exemplo para quem clonar)
 
-📚 Documentação da API (Swagger / OpenAPI)
+### 📚 Documentação da API (Swagger / OpenAPI)
 
 Após iniciar a aplicação, acesse:
 
