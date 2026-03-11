@@ -1,18 +1,21 @@
 # 🐾 VetLife API
 
 ![Java CI](https://github.com/RafaelSantana-Dev/vetlife-api/actions/workflows/ci.yml/badge.svg)
-![Java](https://img.shields.io/badge/Java-21-orange)
-![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.2.3-green)
-![Docker](https://img.shields.io/badge/Docker-Enabled-blue)
-![License](https://img.shields.io/badge/License-MIT-purple)
+![Java](https://img.shields.io/badge/Java-21-orange?style=flat&logo=java&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.2.3-brightgreen?style=flat&logo=spring&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue?style=flat&logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-Cache-red?style=flat&logo=redis&logoColor=white)
+![Security](https://img.shields.io/badge/Spring_Security-JWT-critical?style=flat&logo=springsecurity&logoColor=white)
 
-**VetLife API** é um sistema backend robusto e escalável para gestão de clínicas veterinárias, desenvolvido com **arquitetura de referência** focada em qualidade de código, segurança e performance.
+Sistema backend (API REST) para **gestão de clínicas veterinárias**, desenvolvido com **Java 21** e **Spring Boot 3**, seguindo padrões de arquitetura de software modernos (**Modular Monolith**) e foco total em escalabilidade e segurança.
+
+A aplicação centraliza operações de uma clínica, incluindo **Autenticação**, **Gestão de Tutores**, **Pacientes**, **Veterinários** e **Agendamento de Consultas**.
 
 ---
 
-## 🖥️ Demonstração
+## 🖥️ Demonstração (GIF)
 
-> **Nota:** Para ver a demonstração, adicione o arquivo \demo.gif\ na pasta \docs\ do projeto.
+> Coloque seu GIF em \docs/demo.gif\ (ou ajuste o caminho abaixo).
 
 <p align="center">
   <img src="docs/demo.gif" alt="Demonstração do VetLife API" width="100%" style="border-radius: 5px; box-shadow: 0px 4px 10px rgba(0,0,0,0.2);" />
@@ -20,22 +23,53 @@
 
 ---
 
-## 🚀 Tecnologias & Arquitetura
+## 🚀 Diferenciais Técnicos (Por que este projeto é relevante?)
 
-O sistema foi projetado para simular um ambiente de produção real de uma Big Tech.
+Este não é apenas um CRUD. O projeto implementa desafios reais de engenharia de software:
 
-- **Linguagem:** Java 21
-- **Framework:** Spring Boot 3.2.3
-- **Banco de Dados:** PostgreSQL 15 (Dockerizado)
-- **Cache:** Redis 7 (Dockerizado)
-- **Migrations:** Flyway (Versionamento de banco)
-- **Segurança:** Spring Security 6 + JWT (JSON Web Token) + BCrypt
-- **Documentação:** Swagger UI (OpenAPI 3)
-- **Testes:** JUnit 5 + Mockito
-- **CI/CD:** GitHub Actions
+*   🔒 **Segurança Stateless:** Autenticação via **JWT (JSON Web Token)** com criptografia BCrypt.
+*   ⚡ **Alta Performance:** Uso de **Redis** para cachear listagens (ex: Veterinários) e reduzir carga no banco.
+*   🛡️ **Confiabilidade de Dados:** Implementação de **Soft Delete** (os dados nunca são apagados fisicamente, apenas inativados via \@SQLDelete\).
+*   🏗️ **Arquitetura Modular:** Código organizado por *Features* (Domínios) e não por camadas técnicas, facilitando manutenção e microsserviços futuros.
+*   🔄 **CI/CD:** Pipeline de Integração Contínua com **GitHub Actions** rodando testes automaticamente.
+*   🗄️ **Migrations:** Versionamento de banco de dados com **Flyway**.
 
-### 🏗️ Estrutura do Projeto (Package-by-Feature)
-Diferente da arquitetura em camadas tradicional, este projeto organiza o código por **Domínios de Negócio**, facilitando manutenção e futura extração para microsserviços.
+---
+
+## ⚙️ Funcionalidades Implementadas
+
+### 🔐 Módulo de Autenticação (Auth)
+- Registro de usuários (Sign up).
+- Login seguro com retorno de Token Bearer (Sign in).
+- Proteção de rotas (apenas usuários logados acessam o sistema).
+
+### 🩺 Módulo de Clínica & Agendamentos
+- **Clientes (Tutores):** CRUD completo com Soft Delete.
+- **Pacientes (Pets):** Cadastro com vínculo obrigatório ao Tutor.
+- **Veterinários:** Cadastro com validação de CRMV e Cache de listagem.
+- **Consultas:** Agendamento validado (não permite datas passadas) vinculando Pet + Vet.
+
+---
+
+## 🧪 Tecnologias Utilizadas
+
+- ☕ **Java 21**
+- 🌱 **Spring Boot 3.2.3**
+- 🗄️ **Spring Data JPA**
+- 🐘 **PostgreSQL** (Banco de dados principal)
+- 🔴 **Redis** (Cache distribuído)
+- 🐳 **Docker / Docker Compose**
+- 📦 **Maven**
+- 📑 **Swagger / OpenAPI 3**
+- ⚡ **Lombok**
+- 🔁 **Flyway** (Migrações de banco)
+- 🧪 **JUnit 5, Mockito & GitHub Actions**
+
+---
+
+## 🏗️ Arquitetura do Projeto
+
+O projeto segue a arquitetura **Package-by-Feature** (Modular):
 
 \\\	ext
 src/main/java/com/vetlife/api
@@ -47,83 +81,61 @@ src/main/java/com/vetlife/api
 │   ├── vet           # Gestão de Veterinários (Cache ativo)
 │   └── system        # Health Check
 └── shared
-    ├── config        # Configurações (Swagger, Security, Redis)
+    ├── config        # Configurações Globais (Swagger, Security, Redis)
     └── exception     # Tratamento Global de Erros (RFC 7807)
 \\\
 
 ---
 
-## ✨ Diferenciais Técnicos (Destaques)
+## 🚀 Como Executar o Projeto
 
-### 🔒 Segurança Nível Bancário
-- Autenticação via **Token JWT**.
-- Senhas criptografadas no banco.
-- Proteção contra ataques CSRF e rotas bloqueadas por padrão.
+### ✅ Pré-requisitos
+- **Docker Desktop** instalado e rodando (Obrigatório).
+- **Git** instalado.
 
-### ⚡ Performance com Redis
-- A listagem de veterinários utiliza **Cache com Redis**.
-- A primeira requisição busca no Postgres, as seguintes retornam em milissegundos direto da memória RAM.
-- Cache é invalidado automaticamente (\@CacheEvict\) ao cadastrar novos dados.
-
-### 🛡️ Confiabilidade de Dados
-- **Soft Delete:** Clientes nunca são apagados fisicamente (\DELETE\). O sistema usa \@SQLDelete\ para apenas inativá-los, mantendo histórico.
-- **Transações:** Uso rigoroso de \@Transactional\.
-- **Validações:** Regras de negócio fortes (ex: não permite e-mail duplicado, não permite consulta no passado).
-
----
-
-## 📦 Como Rodar o Projeto
-
-### Pré-requisitos
-- Docker Desktop instalado e rodando.
-- Java 21 (Opcional, pois usamos Maven Wrapper).
-
-### 1️⃣ Clonar e Subir Infraestrutura
+### 1️⃣ Clonar o repositório
 \\\ash
 git clone https://github.com/RafaelSantana-Dev/vetlife-api.git
 cd vetlife-api
-
-# Subir Banco de Dados (Postgres) e Cache (Redis)
-docker compose up -d
 \\\
 
-### 2️⃣ Rodar a Aplicação
+### 2️⃣ Subir a Infraestrutura (Postgres + Redis)
+Não é necessário instalar banco de dados na sua máquina. O Docker faz tudo:
 \\\ash
-# Linux / Mac
-./mvnw clean spring-boot:run
+docker compose up -d 
+\\\
 
-# Windows (PowerShell)
+### 3️⃣ Rodar a aplicação
+**Linux/macOS:**
+\\\ash
+./mvnw clean spring-boot:run
+\\\
+
+**Windows (PowerShell):**
+\\\powershell
 .\mvnw.cmd clean spring-boot:run
 \\\
 
-A aplicação estará rodando em: \http://localhost:8080\
-
 ---
 
-## 📚 Documentação (Swagger)
+## 📚 Documentação da API (Swagger)
 
-A API possui documentação interativa completa.
+A API é 100% documentada e testável via navegador.
 
 1.  Acesse: **http://localhost:8080/swagger-ui/index.html**
-2.  Crie uma conta em \uth-controller\ -> \/register\.
-3.  Faça login em \uth-controller\ -> \/login\.
-4.  Copie o **token** gerado.
-5.  Clique no botão 🔓 **Authorize** no topo da página e cole o token.
-
-Pronto! Você tem acesso total aos endpoints de Clientes, Pets, Veterinários e Consultas.
+2.  **Autentique-se:**
+    *   Crie uma conta em \uth-controller\ -> \/register\.
+    *   Faça login em \uth-controller\ -> \/login\.
+    *   Copie o **Token**.
+    *   Clique no cadeado 🔓 **Authorize** (topo da página) e cole o token.
+3.  Pronto! Você pode testar todos os endpoints.
 
 ---
 
-## 🧪 Testes e Qualidade
+## 🧪 Testes
 
-O projeto possui pipeline de **CI (Integração Contínua)** configurado com **GitHub Actions**.
-A cada *push* ou *pull request*, o sistema automaticamente:
-1.  Sobe uma máquina virtual Ubuntu.
-2.  Instala o Java 21.
-3.  Compila o projeto.
-4.  Executa a bateria de **Testes Unitários**.
+Para rodar a suíte de testes unitários e garantir a integridade das regras de negócio:
 
-Para rodar os testes localmente:
 \\\ash
 .\mvnw.cmd test
 \\\
@@ -132,16 +144,16 @@ Para rodar os testes localmente:
 
 ## 🤝 Contribuições
 
-Este é um projeto de portfólio open-source. Sinta-se à vontade para sugerir melhorias.
+Contribuições são bem-vindas!
 
-1.  Faça um Fork.
-2.  Crie uma branch (\git checkout -b feature/nova-feature\).
-3.  Commit suas mudanças (\git commit -m 'feat: Adiciona nova feature'\).
-4.  Push para a branch (\git push origin feature/nova-feature\).
+1.  Faça um fork do repositório.
+2.  Crie uma branch: \git checkout -b feature/minha-melhoria\.
+3.  Faça as alterações e commite: \git commit -m "feat: minha melhoria"\.
+4.  Envie para o fork: \git push origin feature/minha-melhoria\.
 5.  Abra um Pull Request.
 
 ---
 
 ## 📄 Licença
 
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+Este projeto está licenciado sob a **MIT License**. Consulte o arquivo LICENSE para mais detalhes.
