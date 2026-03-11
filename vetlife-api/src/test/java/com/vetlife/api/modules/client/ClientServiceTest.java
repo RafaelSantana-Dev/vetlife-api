@@ -33,8 +33,9 @@ class ClientServiceTest {
     void create_Success() {
         // Arrange (Preparação)
         ClientRequest request = new ClientRequest("Rafael", "rafael@email.com", "11999999999");
-        Client entity = new Client(1L, "Rafael", "rafael@email.com", "11999999999", OffsetDateTime.now(), null);
-        ClientResponse response = new ClientResponse(1L, "Rafael", "rafael@email.com", "11999999999", OffsetDateTime.now());
+        // ATUALIZADO: Adicionado 'true' para o campo ativo
+        Client entity = new Client(1L, "Rafael", "rafael@email.com", "11999999999", true, OffsetDateTime.now(), null);
+        ClientResponse response = new ClientResponse(1L, "Rafael", "rafael@email.com", "11999999999", true, OffsetDateTime.now());
 
         // Simulando que o banco diz que o e-mail NÃO existe
         when(repository.existsByEmail("rafael@email.com")).thenReturn(false);
