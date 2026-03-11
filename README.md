@@ -8,7 +8,15 @@
 
 **VetLife API** é um sistema backend robusto e escalável para gestão de clínicas veterinárias, desenvolvido com **arquitetura de referência** focada em qualidade de código, segurança e performance.
 
-O projeto vai além do CRUD básico, implementando padrões de mercado como **Modular Monolith**, **Cache Distribuído**, **Soft Delete** e **Segurança Stateless**.
+---
+
+## 🖥️ Demonstração
+
+> **Nota:** Para ver a demonstração, adicione o arquivo \demo.gif\ na pasta \docs\ do projeto.
+
+<p align="center">
+  <img src="docs/demo.gif" alt="Demonstração do VetLife API" width="100%" style="border-radius: 5px; box-shadow: 0px 4px 10px rgba(0,0,0,0.2);" />
+</p>
 
 ---
 
@@ -55,11 +63,11 @@ src/main/java/com/vetlife/api
 ### ⚡ Performance com Redis
 - A listagem de veterinários utiliza **Cache com Redis**.
 - A primeira requisição busca no Postgres, as seguintes retornam em milissegundos direto da memória RAM.
-- Cache é invalidado automaticamente (@CacheEvict) ao cadastrar novos dados.
+- Cache é invalidado automaticamente (\@CacheEvict\) ao cadastrar novos dados.
 
 ### 🛡️ Confiabilidade de Dados
-- **Soft Delete:** Clientes nunca são apagados fisicamente (DELETE). O sistema usa @SQLDelete para apenas inativá-los, mantendo histórico.
-- **Transações:** Uso rigoroso de @Transactional.
+- **Soft Delete:** Clientes nunca são apagados fisicamente (\DELETE\). O sistema usa \@SQLDelete\ para apenas inativá-los, mantendo histórico.
+- **Transações:** Uso rigoroso de \@Transactional\.
 - **Validações:** Regras de negócio fortes (ex: não permite e-mail duplicado, não permite consulta no passado).
 
 ---
