@@ -15,11 +15,25 @@ A aplicação automatiza e centraliza todas as operações de uma clínica: **At
 
 ## 🖥️ Demonstração (GIF)
 
-> **Nota:** Em breve será adicionado um GIF demonstrando a execução da aplicação e a utilização dos endpoints da API.
 
 <p align="center">
   <img src="docs/demo.gif" alt="Demonstração do VetLife API" width="100%" style="border-radius: 5px; box-shadow: 0px 4px 10px rgba(0,0,0,0.2);" />
 </p>
+
+
+### 🔍 O que está acontecendo na demonstração?
+
+O GIF acima ilustra a forte integração entre os módulos do sistema, provando como o ERP automatiza o trabalho da clínica na prática:
+
+- **1. Dashboard Financeiro Inicial:** Começamos consumindo o endpoint `GET /api/v1/painel`, que nos retorna o resumo financeiro atual da clínica. Como esperado, o `faturamento_total` inicia em `R$ 0,00`.
+- **2. Agendamento de Consulta:** Acessamos o endpoint `POST /api/v1/compromissos` e realizamos o agendamento de uma consulta de rotina, vinculando os IDs do Pet e do Veterinário. O sistema processa a regra de negócio e retorna sucesso (`201 Created`).
+- **3. Integração Automática de Caixa:** Retornamos ao painel de controle financeiro e executamos a mesma requisição inicial. O `faturamento_total` agora é de `R$ 150,00`.
+
+💡 **Como isso realmente funciona:**  
+No exato momento em que a consulta é confirmada, o módulo de Atendimento publica um evento de domínio (`ConsultaAgendadaEvent`). O módulo Financeiro, que está escutando esse evento, cria imediatamente o lançamento de receita no fluxo de caixa — tudo de forma síncrona ou com transação compensatória, garantindo consistência total dos dados e **zero necessidade de intervenção manual**.
+
+É essa comunicação automática entre módulos que transforma o VetLife em um ERP verdadeiramente integrado, eliminando retrabalho e erros que todo mundo já cansou de ver em sistemas fragmentados.
+
 
 ---
 
