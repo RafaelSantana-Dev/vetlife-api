@@ -44,6 +44,13 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
+        <!-- JWT (Auth0) - ADICIONADO AQUI -->
+        <dependency>
+            <groupId>com.auth0</groupId>
+            <artifactId>java-jwt</artifactId>
+            <version>4.4.0</version>
+        </dependency>
+
         <!-- Swagger / OpenAPI (Versão Compatível com Boot 3.2) -->
         <dependency>
             <groupId>org.springdoc</groupId>
