@@ -1,4 +1,4 @@
-# 🐾 VetLife API
+# 🐾 VetLife API (ERP Veterinário)
 
 ![Java CI](https://github.com/RafaelSantana-Dev/vetlife-api/actions/workflows/ci.yml/badge.svg)
 ![Java](https://img.shields.io/badge/Java-21-orange?style=flat&logo=java&logoColor=white)
@@ -7,9 +7,9 @@
 ![Redis](https://img.shields.io/badge/Redis-Cache-red?style=flat&logo=redis&logoColor=white)
 ![Security](https://img.shields.io/badge/Spring_Security-JWT-critical?style=flat&logo=springsecurity&logoColor=white)
 
-Sistema backend (API REST) para **gestão de clínicas veterinárias**, desenvolvido com **Java 21** e **Spring Boot 3**, com arquitetura RESTful e foco total em **boas práticas**, **organização modular**, **performance** e **segurança**.
+Sistema backend (API REST) atuando como um **ERP completo** para gestão de clínicas veterinárias, desenvolvido com **Java 21** e **Spring Boot 3**. O sistema segue o padrão de arquitetura **Modular Monolith** e foca em alta performance, segurança e regras de negócio interligadas.
 
-A aplicação centraliza operações de uma clínica em três módulos principais: **🐾 Adoção**, **🩺 Clínica Veterinária** e **🛍️ Loja de produtos**.
+A aplicação automatiza e centraliza todas as operações de uma clínica: **Atendimento, Adoção, E-commerce (Loja) e Fluxo de Caixa (Financeiro)**.
 
 ---
 
@@ -23,38 +23,27 @@ A aplicação centraliza operações de uma clínica em três módulos principai
 
 ---
 
-## 📌 Visão Geral
+## ⚙️ Funcionalidades & Integrações (O Core do Negócio)
 
-O **VetLife API** simula um sistema completo para clínicas veterinárias, permitindo gerenciar:
+### 🏥 Módulo de Clínica & Consultas
+- **Gestão de Tutores (Clientes):** CRUD completo com técnica de Soft Delete (inativação lógica).
+- **Gestão de Pacientes (Pets):** Vinculados obrigatoriamente aos seus tutores.
+- **Corpo Clínico (Veterinários):** Validação de CRMV e consultas otimizadas via **Redis Cache**.
+- **Agendamento Inteligente:** Validação de datas. **Integração Automática:** Ao agendar uma consulta, o sistema gera automaticamente uma receita (entrada) no Módulo Financeiro.
 
-- 🩺 **Clínica Veterinária**: pacientes, veterinários, consultas e histórico de atendimentos.
-- 🐾 **Adoção**: cadastro de animais, processos de adoção e acompanhamento de status.
-- 🛍️ **Loja**: produtos, estoque, vendas e atualização automática de estoque.
+### 🛍️ Módulo de Loja (E-commerce)
+- Cadastro de produtos e controle de estoque real.
+- **Processamento de Vendas:** Valida se há estoque suficiente, realiza a baixa automática do produto e **registra o faturamento diretamente no Módulo Financeiro**.
 
-Toda a especificação de rotas e modelos está documentada via **Swagger/OpenAPI**.
+### 🐾 Módulo de Adoção
+- Plataforma integrada para cadastro de animais disponíveis e controle de status de adoção.
 
----
+### 💰 Módulo Financeiro & Dashboard
+- Registro centralizado de todo o fluxo de caixa da clínica.
+- Endpoint de Dashboard sumarizando o total de clientes, pets e o faturamento global em tempo real.
 
-## ⚙️ Funcionalidades
-
-### 🐾 Módulo de Adoção (Roadmap)
-- Cadastro de animais disponíveis para adoção.
-- Listagem e consulta por filtros.
-- Registro de processos de adoção.
-- Acompanhamento do status das adoções.
-
-### 🩺 Módulo de Clínica Veterinária & Autenticação (MVP)
-- **Autenticação:** Login seguro via Token JWT.
-- **Cadastro de pacientes:** Vinculado obrigatoriamente a um Tutor.
-- **Cadastro de veterinários:** Com validação de CRMV e cache de listagem.
-- **Agendamento de consultas:** Validando conflitos de datas.
-- **Histórico:** Histórico médico de atendimentos veterinários.
-
-### 🛍️ Módulo de Loja (Roadmap)
-- Cadastro de produtos.
-- Controle de estoque.
-- Registro de vendas.
-- Baixa automática do estoque ao vender.
+### 🔐 Módulo de Autenticação
+- Login e registro blindados. Acesso aos módulos restrito por **Token JWT**.
 
 ---
 
@@ -62,13 +51,13 @@ Toda a especificação de rotas e modelos está documentada via **Swagger/OpenAP
 
 Este projeto não é apenas um CRUD padrão. Ele implementa desafios reais de engenharia de software corporativa:
 
-*   🔒 **Segurança Stateless:** Autenticação via **JWT (JSON Web Token)** com senhas hasheadas via **BCrypt**.
+*   🔒 **Segurança Stateless:** Autenticação via **JWT (Auth0)** com senhas hasheadas via **BCrypt**.
 *   ⚡ **Alta Performance:** Uso de **Redis** para cachear listagens e reduzir drasticamente a carga no banco de dados.
-*   🛡️ **Confiabilidade de Dados:** Implementação de **Soft Delete** (`@SQLDelete`). Os dados nunca são apagados fisicamente, apenas inativados.
-*   🏗️ **Isolamento de Dados:** Uso de **Java Records** para criação de DTOs imutáveis de entrada e saída.
-*   🚨 **Tratamento de Erros:** Uso do padrão global RFC 7807 (`ProblemDetail`) para retornos de erro limpos e padronizados.
-*   🗄️ **Migrations:** Evolução do esquema de banco de dados 100% controlada via **Flyway**.
-*   🔄 **CI/CD:** Pipeline de Integração Contínua com **GitHub Actions** que roda a suíte de testes automaticamente a cada commit.
+*   🛡️ **Confiabilidade de Dados:** Implementação de **Soft Delete** (`@SQLDelete`).
+*   🏗️ **Isolamento de Dados:** Uso de **Java Records** para DTOs imutáveis de entrada e saída.
+*   🚨 **Tratamento de Erros:** Padrão global RFC 7807 (`ProblemDetail`).
+*   🗄️ **Migrations:** Evolução do esquema de banco de dados 100% controlada via **Flyway** (Tabelas criadas via scripts SQL).
+*   🔄 **CI/CD:** Pipeline de Integração Contínua com **GitHub Actions** que roda a suíte de testes (JUnit/Mockito) automaticamente a cada commit.
 
 ---
 
@@ -91,24 +80,25 @@ Este projeto não é apenas um CRUD padrão. Ele implementa desafios reais de en
 
 ## 🏗️ Arquitetura do Projeto
 
-O projeto segue a arquitetura **Package-by-Feature** (Modular Monolith).
-
-Cada módulo segue boas práticas de arquitetura RESTful, com separação clara entre as responsabilidades: **Controller, Service, Mapper, Repository, DTOs e Entities**.
+O projeto segue a arquitetura **Package-by-Feature** (Modular Monolith). Cada módulo segue o padrão: *Controller → Service → Mapper → Repository → Entity*.
 
 Estrutura base do projeto:
 
 ```text
 src/main/java/com/vetlife/api
 ├── modules
-│   ├── auth          # Autenticação e JWT
+│   ├── adoption      # Gestão de adoção de pets
 │   ├── appointment   # Consultas e Agendamentos
+│   ├── auth          # Autenticação e JWT
 │   ├── client        # Gestão de Tutores (Soft Delete)
+│   ├── finance       # Lançamentos e fluxo de caixa automático
 │   ├── pet           # Gestão de Pacientes
-│   ├── vet           # Gestão de Veterinários (Redis Cache)
-│   └── system        # Health Check
+│   ├── store         # Produtos e baixa de estoque
+│   ├── system        # Dashboard (Estatísticas) e Health Check
+│   └── vet           # Gestão de Veterinários (Redis Cache)
 └── shared
     ├── config        # Configurações Globais (Swagger, Filter)
-    └── exception     # Tratamento de Erros Global
+    └── exception     # Tratamento de Erros Global (RFC 7807)
 
 
 ```
@@ -123,6 +113,7 @@ Essa organização facilita manutenção, escalabilidade e a realização de tes
 ### ✅ Pré-requisitos
 - Java 21
 - Docker e Docker Compose (Obrigatório para o banco e cache)
+- Git instalado
 - (Opcional) Maven — o projeto já inclui **Maven Wrapper**
 
 ### 1️⃣ Clonar o repositório
