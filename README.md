@@ -1,199 +1,139 @@
 # 🐾 VetLife API
 
-Sistema backend (API REST) para **gestão de clínicas veterinárias**, desenvolvido com **Java 21** e **Spring Boot**, com arquitetura RESTful e foco em **boas práticas**, **organização em camadas**, **testes** e **migrações de banco**.
+![Java CI](https://github.com/RafaelSantana-Dev/vetlife-api/actions/workflows/ci.yml/badge.svg)
+![Java](https://img.shields.io/badge/Java-21-orange)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.2.3-green)
+![Docker](https://img.shields.io/badge/Docker-Enabled-blue)
+![License](https://img.shields.io/badge/License-MIT-purple)
 
-A aplicação centraliza operações de uma clínica em três módulos: **🐾 Adoção**, **🩺 Clínica** e **🛍️ Loja**.
+**VetLife API** é um sistema backend robusto e escalável para gestão de clínicas veterinárias, desenvolvido com **arquitetura de referência** focada em qualidade de código, segurança e performance.
 
----
-
-## 🖥️ Demonstração (GIF)
-
-> Coloque seu GIF em `docs/demo.gif` (ou ajuste o caminho abaixo).
-
-<p align="center">
-  <img src="docs/demo.gif" alt="Demonstração do VetLife API" width="900" />
-</p>
+O projeto vai além do CRUD básico, implementando padrões de mercado como **Modular Monolith**, **Cache Distribuído**, **Soft Delete** e **Segurança Stateless**.
 
 ---
 
-## 📌 Visão Geral
+## 🚀 Tecnologias & Arquitetura
 
-O **VetLife API** simula um sistema completo para clínicas veterinárias, permitindo gerenciar:
+O sistema foi projetado para simular um ambiente de produção real de uma Big Tech.
 
-- 🩺 **Clínica Veterinária**: pacientes, veterinários, consultas e histórico de atendimentos  
-- 🐾 **Adoção**: cadastro de animais, processos de adoção e acompanhamento de status  
-- 🛍️ **Loja**: produtos, estoque, vendas e atualização automática de estoque  
+- **Linguagem:** Java 21
+- **Framework:** Spring Boot 3.2.3
+- **Banco de Dados:** PostgreSQL 15 (Dockerizado)
+- **Cache:** Redis 7 (Dockerizado)
+- **Migrations:** Flyway (Versionamento de banco)
+- **Segurança:** Spring Security 6 + JWT (JSON Web Token) + BCrypt
+- **Documentação:** Swagger UI (OpenAPI 3)
+- **Testes:** JUnit 5 + Mockito
+- **CI/CD:** GitHub Actions
 
-Toda a especificação de rotas e modelos está documentada via **Swagger/OpenAPI**.
+### 🏗️ Estrutura do Projeto (Package-by-Feature)
+Diferente da arquitetura em camadas tradicional, este projeto organiza o código por **Domínios de Negócio**, facilitando manutenção e futura extração para microsserviços.
 
----
-
-## ⚙️ Funcionalidades
-
-### 🐾 Módulo de Adoção
-- Cadastro de animais disponíveis para adoção  
-- Listagem e consulta por filtros  
-- Registro de processos de adoção  
-- Acompanhamento do status das adoções  
-
-### 🩺 Módulo de Clínica Veterinária
-- Cadastro de pacientes  
-- Cadastro de veterinários  
-- Agendamento de consultas  
-- Histórico de atendimentos veterinários  
-
-### 🛍️ Módulo de Loja
-- Cadastro de produtos  
-- Controle de estoque  
-- Registro de vendas  
-- Baixa automática do estoque ao vender  
-
----
-
-## 🧪 Tecnologias Utilizadas
-
-- ☕ **Java 21**
-- 🌱 **Spring Boot**
-- 🗄️ **Spring Data JPA**
-- 🐬 **MySQL**
-- 🐳 **Docker / Docker Compose**
-- 📦 **Maven / Maven Wrapper**
-- 📑 **Swagger / OpenAPI**
-- ⚡ **Lombok**
-- 🔁 **Flyway** (migrações de banco)
-- 🧪 **JUnit 5** e **Mockito**
-
----
-
-## 🏗️ Arquitetura do Projeto
-
-Padrão em camadas:
-
-**Controller → Service → Repository → Database**
-
-Estrutura base (pode variar conforme evolução)
-
+\\\	ext
 src/main/java/com/vetlife/api
-├── controller
-├── service
-├── repository
-├── entity (ou model)
-├── dto
-└── config
-
-
-Essa organização facilita manutenção, escalabilidade e testes.
-
----
-
-## 🚀 Como Executar o Projeto
-
-### ✅ Pré-requisitos
-- Java 21
-- Docker e Docker Compose
-- (Opcional) Maven — o projeto já inclui **Maven Wrapper**
+├── modules
+│   ├── auth          # Login, Registro e Token Service
+│   ├── appointment   # Agendamentos (Consultas)
+│   ├── client        # Gestão de Tutores (Soft Delete ativo)
+│   ├── pet           # Gestão de Pacientes
+│   ├── vet           # Gestão de Veterinários (Cache ativo)
+│   └── system        # Health Check
+└── shared
+    ├── config        # Configurações (Swagger, Security, Redis)
+    └── exception     # Tratamento Global de Erros (RFC 7807)
+\\\
 
 ---
 
-### 1️⃣ Clonar o repositório
-```bash
+## ✨ Diferenciais Técnicos (Destaques)
+
+### 🔒 Segurança Nível Bancário
+- Autenticação via **Token JWT**.
+- Senhas criptografadas no banco.
+- Proteção contra ataques CSRF e rotas bloqueadas por padrão.
+
+### ⚡ Performance com Redis
+- A listagem de veterinários utiliza **Cache com Redis**.
+- A primeira requisição busca no Postgres, as seguintes retornam em milissegundos direto da memória RAM.
+- Cache é invalidado automaticamente (@CacheEvict) ao cadastrar novos dados.
+
+### 🛡️ Confiabilidade de Dados
+- **Soft Delete:** Clientes nunca são apagados fisicamente (DELETE). O sistema usa @SQLDelete para apenas inativá-los, mantendo histórico.
+- **Transações:** Uso rigoroso de @Transactional.
+- **Validações:** Regras de negócio fortes (ex: não permite e-mail duplicado, não permite consulta no passado).
+
+---
+
+## 📦 Como Rodar o Projeto
+
+### Pré-requisitos
+- Docker Desktop instalado e rodando.
+- Java 21 (Opcional, pois usamos Maven Wrapper).
+
+### 1️⃣ Clonar e Subir Infraestrutura
+\\\ash
 git clone https://github.com/RafaelSantana-Dev/vetlife-api.git
 cd vetlife-api
-```
 
-### 2️⃣ Subir infraestrutura (MySQL) com Docker
+# Subir Banco de Dados (Postgres) e Cache (Redis)
+docker compose up -d
+\\\
 
-```bash
-docker compose up -d 
-```
+### 2️⃣ Rodar a Aplicação
+\\\ash
+# Linux / Mac
+./mvnw clean spring-boot:run
 
-### 3️⃣ Rodar a aplicação
+# Windows (PowerShell)
+.\mvnw.cmd clean spring-boot:run
+\\\
 
-Linux/macOS:
+A aplicação estará rodando em: \http://localhost:8080\
 
-```bash
-./mvnw spring-boot:run
-```
+---
 
-Windows:
+## 📚 Documentação (Swagger)
 
-```powershell
-mvnw.cmd spring-boot:run
-```
+A API possui documentação interativa completa.
 
-### 🔁 As migrações do banco são executadas automaticamente via Flyway na inicialização.
+1.  Acesse: **http://localhost:8080/swagger-ui/index.html**
+2.  Crie uma conta em \uth-controller\ -> \/register\.
+3.  Faça login em \uth-controller\ -> \/login\.
+4.  Copie o **token** gerado.
+5.  Clique no botão 🔓 **Authorize** no topo da página e cole o token.
 
-🔧 Configuração
-As configurações ficam em:
+Pronto! Você tem acesso total aos endpoints de Clientes, Pets, Veterinários e Consultas.
 
-src/main/resources/application.yaml
-Recomendação profissional:
+---
 
-não commitar credenciais reais
-usar variáveis de ambiente e/ou arquivos de configuração locais
-Sugestão de arquivos:
+## 🧪 Testes e Qualidade
 
-application.yaml (padrão do projeto)
-application-local.yaml (local, no .gitignore)
-application.example.yaml (exemplo para quem clonar)
+O projeto possui pipeline de **CI (Integração Contínua)** configurado com **GitHub Actions**.
+A cada *push* ou *pull request*, o sistema automaticamente:
+1.  Sobe uma máquina virtual Ubuntu.
+2.  Instala o Java 21.
+3.  Compila o projeto.
+4.  Executa a bateria de **Testes Unitários**.
 
-### 📚 Documentação da API (Swagger / OpenAPI)
+Para rodar os testes localmente:
+\\\ash
+.\mvnw.cmd test
+\\\
 
-Após iniciar a aplicação, acesse:
+---
 
-Swagger UI: http://localhost:8080/swagger-ui.html
-(dependendo da versão: http://localhost:8080/swagger-ui/index.html)
-OpenAPI JSON: http://localhost:8080/v3/api-docs
+## 🤝 Contribuições
 
-A interface do Swagger permite testar os endpoints diretamente pelo navegador.
+Este é um projeto de portfólio open-source. Sinta-se à vontade para sugerir melhorias.
 
-### 🧪 Testes
+1.  Faça um Fork.
+2.  Crie uma branch (\git checkout -b feature/nova-feature\).
+3.  Commit suas mudanças (\git commit -m 'feat: Adiciona nova feature'\).
+4.  Push para a branch (\git push origin feature/nova-feature\).
+5.  Abra um Pull Request.
 
-Rodar testes:
-./mvnw test
+---
 
-### 🧭 Boas práticas adotadas
-Separação por camadas (Controller/Service/Repository)
-DTOs para entrada/saída quando necessário
-Migrações versionadas com Flyway
-Documentação centralizada em Swagger/OpenAPI
-Testes unitários com JUnit e Mockito
+## 📄 Licença
 
-### 🤝 Contribuições
-Contribuições são bem-vindas!
-
-1. Faça um fork do repositório  
-
-2. Crie uma branch:
-
-```shell
-git checkout -b minha-feature
-```
-
-3. Faça as alterações e rode os testes:
-
-```shell
-./mvnw test
-```
-
-4. Commit das mudanças (sugestão: Conventional Commits):
-
-```shell
-git commit -m "feat: adicionar endpoint de agendamento"
-```
-
-5.Envie para o seu fork:
-
-```shell
-git push origin minha-feature
-```
-
-6. Abra um Pull Request no GitHub apontando para a branch main do repositório original
-
-7. (Se solicitado) Ajuste o PR e envie novos commits — o PR será atualizado automaticamente
-
-8. Após o merge, você pode deletar a branch no GitHub para manter o repositório organizado
-
-📄 Licença
-Este projeto está licenciado sob a MIT License.
-Consulte o arquivo LICENSE para mais detalhes.
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
