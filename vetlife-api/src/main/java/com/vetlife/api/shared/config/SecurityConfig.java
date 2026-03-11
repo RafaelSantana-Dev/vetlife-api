@@ -9,7 +9,17 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                            "/v3/api-docs/**", 
+                            "/swagger-ui/**", 
+                            "/swagger-ui.html", 
+                            "/health", 
+                            "/api/v1/clients/**", 
+                            "/api/v1/pets/**",
+                            "/api/v1/vets/**" // Nova liberação
+                        ).permitAll()
+                        .anyRequest().permitAll())
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable).build();
     }

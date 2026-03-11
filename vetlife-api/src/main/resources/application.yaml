@@ -1,11 +1,17 @@
 spring:
   application:
     name: vetlife-api
+
   datasource:
     url: jdbc:postgresql://localhost:5432/vetlife_db
     username: vetlife_user
     password: vetlife_pass
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      timeout: 30000
+
   jpa:
     open-in-view: false
     hibernate:
@@ -13,5 +19,15 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+# Configurações do Swagger (Simples e Diretas)
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    disable-swagger-default-url: true
+    operations-sorter: method
+
 server:
   port: 8080
