@@ -21,6 +21,7 @@ public class ClientMapper {
                 entity.getNome(),
                 entity.getEmail(),
                 entity.getTelefone(),
+                entity.getAtivo(),
                 entity.getCreatedAt()
         );
     }

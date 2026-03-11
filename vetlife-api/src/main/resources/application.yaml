@@ -3,21 +3,33 @@ spring:
     name: vetlife-api
   main:
     allow-bean-definition-overriding: true
+    
   datasource:
     url: jdbc:postgresql://localhost:5432/vetlife_db
     username: vetlife_user
     password: vetlife_pass
     driver-class-name: org.postgresql.Driver
+    
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: validate # AGORA É VALIDATE (NÍVEL PRODUÇÃO)
+      ddl-auto: validate
     properties:
       hibernate:
         format_sql: true
+        
   flyway:
     enabled: true
     baseline-on-migrate: true
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000
 
 springdoc:
   api-docs:

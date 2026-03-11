@@ -15,9 +15,11 @@ A aplicação centraliza operações de uma clínica em três módulos principai
 
 ## 🖥️ Demonstração (GIF)
 
-> Coloque seu GIF em docs/demo.gif (ou ajuste o caminho abaixo).
+> **Nota:** Em breve será adicionado um GIF demonstrando a execução da aplicação e a utilização dos endpoints da API.
 
-![Demonstração do VetLife API](docs/demo.gif)
+<p align="center">
+  <img src="docs/demo.gif" alt="Demonstração do VetLife API" width="100%" style="border-radius: 5px; box-shadow: 0px 4px 10px rgba(0,0,0,0.2);" />
+</p>
 
 ---
 
@@ -35,20 +37,20 @@ Toda a especificação de rotas e modelos está documentada via **Swagger/OpenAP
 
 ## ⚙️ Funcionalidades
 
-### 🐾 Módulo de Adoção
+### 🐾 Módulo de Adoção (Roadmap)
 - Cadastro de animais disponíveis para adoção.
 - Listagem e consulta por filtros.
 - Registro de processos de adoção.
 - Acompanhamento do status das adoções.
 
-### 🩺 Módulo de Clínica Veterinária & Autenticação
+### 🩺 Módulo de Clínica Veterinária & Autenticação (MVP)
 - **Autenticação:** Login seguro via Token JWT.
 - **Cadastro de pacientes:** Vinculado obrigatoriamente a um Tutor.
 - **Cadastro de veterinários:** Com validação de CRMV e cache de listagem.
 - **Agendamento de consultas:** Validando conflitos de datas.
 - **Histórico:** Histórico médico de atendimentos veterinários.
 
-### 🛍️ Módulo de Loja
+### 🛍️ Módulo de Loja (Roadmap)
 - Cadastro de produtos.
 - Controle de estoque.
 - Registro de vendas.
@@ -56,19 +58,33 @@ Toda a especificação de rotas e modelos está documentada via **Swagger/OpenAP
 
 ---
 
+## 🚀 Diferenciais Técnicos e Boas Práticas
+
+Este projeto não é apenas um CRUD padrão. Ele implementa desafios reais de engenharia de software corporativa:
+
+*   🔒 **Segurança Stateless:** Autenticação via **JWT (JSON Web Token)** com senhas hasheadas via **BCrypt**.
+*   ⚡ **Alta Performance:** Uso de **Redis** para cachear listagens e reduzir drasticamente a carga no banco de dados.
+*   🛡️ **Confiabilidade de Dados:** Implementação de **Soft Delete** (`@SQLDelete`). Os dados nunca são apagados fisicamente, apenas inativados.
+*   🏗️ **Isolamento de Dados:** Uso de **Java Records** para criação de DTOs imutáveis de entrada e saída.
+*   🚨 **Tratamento de Erros:** Uso do padrão global RFC 7807 (`ProblemDetail`) para retornos de erro limpos e padronizados.
+*   🗄️ **Migrations:** Evolução do esquema de banco de dados 100% controlada via **Flyway**.
+*   🔄 **CI/CD:** Pipeline de Integração Contínua com **GitHub Actions** que roda a suíte de testes automaticamente a cada commit.
+
+---
+
 ## 🧪 Tecnologias Utilizadas
 
-- ☕ **Java 21**
+- ☕ **Java 21** (Uso de Records)
 - 🌱 **Spring Boot 3.2.3**
 - 🗄️ **Spring Data JPA**
-- 🐘 **PostgreSQL** (Banco de dados principal)
-- 🔴 **Redis** (Cache de alta performance)
+- 🐘 **PostgreSQL 15** (Banco de dados principal)
+- 🔴 **Redis 7** (Cache de alta performance)
 - 🐳 **Docker / Docker Compose**
 - 📦 **Maven / Maven Wrapper**
 - 📑 **Swagger / OpenAPI 3**
 - ⚡ **Lombok**
 - 🔁 **Flyway** (Migrações de banco de dados)
-- 🔒 **Spring Security + JWT + BCrypt**
+- 🔒 **Spring Security + JWT (Auth0) + BCrypt**
 - 🧪 **JUnit 5 e Mockito**
 
 ---
@@ -81,17 +97,22 @@ Cada módulo segue boas práticas de arquitetura RESTful, com separação clara 
 
 Estrutura base do projeto:
 
-    src/main/java/com/vetlife/api
-    ├── modules
-    │   ├── auth          # Autenticação e JWT
-    │   ├── appointment   # Consultas e Agendamentos
-    │   ├── client        # Gestão de Tutores
-    │   ├── pet           # Gestão de Pacientes
-    │   ├── vet           # Gestão de Veterinários
-    │   └── system        # Health Check
-    └── shared
-        ├── config        # Configurações Globais
-        └── exception     # Tratamento de Erros
+```text
+src/main/java/com/vetlife/api
+├── modules
+│   ├── auth          # Autenticação e JWT
+│   ├── appointment   # Consultas e Agendamentos
+│   ├── client        # Gestão de Tutores (Soft Delete)
+│   ├── pet           # Gestão de Pacientes
+│   ├── vet           # Gestão de Veterinários (Redis Cache)
+│   └── system        # Health Check
+└── shared
+    ├── config        # Configurações Globais (Swagger, Filter)
+    └── exception     # Tratamento de Erros Global
+
+
+```
+
 
 Essa organização facilita manutenção, escalabilidade e a realização de testes da aplicação.
 
@@ -142,12 +163,20 @@ As configurações ficam em:
 ## 📚 Documentação da API (Swagger / OpenAPI)
 
 Após iniciar a aplicação, acesse:
-**http://localhost:8080/swagger-ui/index.html**
+👉 **http://localhost:8080/swagger-ui/index.html**
 
 A interface do Swagger permite testar todos os endpoints da API diretamente pelo navegador. 
-*Lembre-se de criar uma conta em `/auth/register`, fazer login, copiar o Token e colar no cadeado "Authorize" para ter acesso liberado às rotas.*
 
----
+**Como acessar as rotas protegidas (Importante):**
+Para garantir a segurança da API, todas as requisições exigem autenticação. Siga os passos abaixo para liberar o Swagger:
+
+1.  Crie uma conta usando a rota `POST /api/v1/auth/register`.
+2.  Faça o login em `POST /api/v1/auth/login` (usando os mesmos dados).
+3.  O servidor retornará um **Token JWT**. Copie apenas o texto do token.
+4.  Suba ao topo da página do Swagger, clique no botão 🔓 **Authorize** (cadeado).
+5.  Cole o seu Token no campo de valor e clique em *Authorize*.
+
+Pronto! O cadeado será fechado e você terá permissão total para testar os endpoints de Clientes, Pets, Veterinários e Consultas.
 
 ## 🧭 Boas práticas adotadas
 

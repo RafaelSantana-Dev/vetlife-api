@@ -5,6 +5,8 @@ import com.vetlife.api.modules.vet.dto.VetResponse;
 import com.vetlife.api.shared.exception.BusinessException;
 import com.vetlife.api.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,7 @@ public class VetService {
     private final VetMapper mapper;
 
     @Transactional
+    @CacheEvict(value = "veterinarios", allEntries = true)
     public VetResponse create(VetRequest request) {
         if (repository.existsByCrmv(request.crmv())) {
             throw new BusinessException("Já existe um veterinário com este CRMV.");
@@ -25,13 +28,14 @@ public class VetService {
         if (repository.existsByEmail(request.email())) {
             throw new BusinessException("Já existe um veterinário com este E-mail.");
         }
-
         Veterinarian saved = repository.save(mapper.toEntity(request));
         return mapper.toResponse(saved);
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "veterinarios")
     public Page<VetResponse> listAll(Pageable pageable) {
+        System.out.println(">>> BUSCANDO NO BANCO DE DADOS (POSTGRES) <<<");
         return repository.findAll(pageable).map(mapper::toResponse);
     }
 

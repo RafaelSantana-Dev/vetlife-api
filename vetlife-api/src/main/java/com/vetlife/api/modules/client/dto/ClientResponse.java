@@ -7,5 +7,6 @@ public record ClientResponse(
     String nome,
     String email,
     String telefone,
+    Boolean ativo,
     OffsetDateTime createdAt
 ) {}
