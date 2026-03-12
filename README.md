@@ -47,11 +47,14 @@ No exato momento em que a consulta é confirmada, o módulo de Atendimento publi
 * **Processamento de Vendas:** Valida se há estoque suficiente, realiza a baixa automática do produto e registra o faturamento diretamente no Módulo Financeiro.
 
 ### 🐾 Módulo de Adoção
-* Plataforma integrada para cadastro de animais disponíveis e controle de status de adoção.
+* Plataforma integrada para cadastro de animais disponíveis para adoção.
+* Fluxo completo: `Controller` → `Service` → `Mapper` → `Repository` com DTOs de entrada e saída.
+* **Endpoint de adoção:** `PATCH /api/v1/adoption/{id}/adopt` — altera o status do animal para "adotado", com validação de disponibilidade.
 
 ### 💰 Módulo Financeiro e Dashboard
-* Registro centralizado de todo o fluxo de caixa da clínica.
-* Endpoint de Dashboard resumindo o total de clientes, pets e o faturamento global em tempo real.
+* Registro centralizado de todo o fluxo de caixa da clínica com `Controller`, `Service`, `Mapper` e DTOs próprios.
+* **Endpoint de lançamentos:** `GET /api/v1/finance` — listagem paginada de todas as entradas e saídas.
+* **Dashboard otimizado:** `GET /api/v1/dashboard` — retorna total de clientes, pets, faturamento total, total de entradas e total de saídas, calculados diretamente no banco via `JPQL` (sem carregar todos os registros em memória).
 
 ### 🔐 Módulo de Autenticação
 * Login e registro seguros. Acesso aos módulos restritos por token `JWT`.
@@ -62,13 +65,15 @@ No exato momento em que a consulta é confirmada, o módulo de Atendimento publi
 
 Este projeto não é apenas um CRUD padrão. Ele implementa desafios reais de engenharia de software corporativo:
 
-* 🔒 **Segurança Stateless:** Autenticação via `JWT` (Auth0) com senhas cacheadas/hasheadas via `BCrypt`.
+* 🔒 **Segurança Stateless:** Autenticação via `JWT` (Auth0) com senhas hasheadas via `BCrypt`. O secret do JWT é configurado via `application.yaml` (nunca hardcoded no código).
 * ⚡ **Alta Performance:** Uso de `Redis` para armazenar listas (como a de Veterinários) e reduzir drasticamente a carga no banco de dados.
 * 🛡️ **Confiabilidade de Dados:** Implementação de Soft Delete (`@SQLDelete`).
 * 🏗️ **Isolamento de Dados:** Uso de `Records` do Java para DTOs imutáveis de entrada e saída.
 * 🚨 **Tratamento de Erros:** Padrão global RFC 7807 (`ProblemDetail`).
 * 🗄️ **Migrações:** Evolução do esquema de banco de dados 100% controlado via `Flyway`.
 * 🔄 **CI/CD:** Pipeline de Integração Contínua com GitHub Actions que roda a suíte de testes (`JUnit`/`Mockito`) automaticamente a cada `commit`.
+* 📝 **Logs Profissionais:** Logging estruturado com `Slf4j` em toda a aplicação (sem `System.out.println`).
+* 🔍 **Auditoria de Requisições:** `LoggingInterceptor` que registra automaticamente o método e a URI de cada requisição recebida pela API.
 
 ---
 
