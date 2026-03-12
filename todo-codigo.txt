@@ -1,0 +1,1517 @@
+﻿
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\VetlifeApiApplication.java ==========
+
+package com.vetlife.api;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
+
+@SpringBootApplication
+@EnableCaching
+public class VetlifeApiApplication {
+    public static void main(String[] args) { SpringApplication.run(VetlifeApiApplication.class, args); }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\adoption\AdoptionPet.java ==========
+
+package com.vetlife.api.modules.adoption;
+import jakarta.persistence.*;
+import lombok.*;
+@Entity @Table(name = "animais_adocao")
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+public class AdoptionPet {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String nome;
+    private String especie;
+    private String descricao;
+    @Builder.Default
+    private boolean disponivel = true;
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\adoption\AdoptionPetController.java ==========
+
+package com.vetlife.api.modules.adoption;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+@RestController @RequestMapping("/api/v1/adoption") @RequiredArgsConstructor
+public class AdoptionPetController {
+    private final AdoptionPetRepository repository;
+    @GetMapping public List<AdoptionPet> list() { return repository.findAll(); }
+    @PostMapping public AdoptionPet create(@RequestBody AdoptionPet pet) { return repository.save(pet); }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\adoption\AdoptionPetRepository.java ==========
+
+package com.vetlife.api.modules.adoption;
+import org.springframework.data.jpa.repository.JpaRepository;
+public interface AdoptionPetRepository extends JpaRepository<AdoptionPet, Long> {}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\appointment\Appointment.java ==========
+
+package com.vetlife.api.modules.appointment;
+
+import com.vetlife.api.modules.pet.Pet;
+import com.vetlife.api.modules.vet.Veterinarian;
+import jakarta.persistence.*;
+import lombok.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "consultas")
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+public class Appointment {
+
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private LocalDateTime dataHora;
+
+    @Column(nullable = false, length = 200)
+    private String motivo;
+
+    @Column(nullable = false, length = 30)
+    private String status; // AGENDADA, CANCELADA, REALIZADA
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pet_id", nullable = false)
+    private Pet pet;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vet_id", nullable = false)
+    private Veterinarian vet;
+
+    private LocalDateTime createdAt;
+    @PrePersist void onCreate() { this.createdAt = LocalDateTime.now(); }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\appointment\AppointmentController.java ==========
+
+package com.vetlife.api.modules.appointment;
+
+import com.vetlife.api.modules.appointment.dto.AppointmentRequest;
+import com.vetlife.api.modules.appointment.dto.AppointmentResponse;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+@RestController
+@RequestMapping("/api/v1/appointments")
+@RequiredArgsConstructor
+public class AppointmentController {
+
+    private final AppointmentService service;
+
+    @PostMapping
+    public ResponseEntity<AppointmentResponse> agendar(@RequestBody @Valid AppointmentRequest request) {
+        AppointmentResponse response = service.agendar(request);
+        var uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(response.id()).toUri();
+        return ResponseEntity.created(uri).body(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<Page<AppointmentResponse>> list(@PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(service.listar(pageable));
+    }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\appointment\AppointmentMapper.java ==========
+
+package com.vetlife.api.modules.appointment;
+
+import com.vetlife.api.modules.appointment.dto.AppointmentRequest;
+import com.vetlife.api.modules.appointment.dto.AppointmentResponse;
+import com.vetlife.api.modules.pet.Pet;
+import com.vetlife.api.modules.vet.Veterinarian;
+import org.springframework.stereotype.Component;
+
+@Component
+public class AppointmentMapper {
+    public Appointment toEntity(AppointmentRequest dto, Pet pet, Veterinarian vet) {
+        return Appointment.builder()
+                .dataHora(dto.dataHora())
+                .motivo(dto.motivo())
+                .status("AGENDADA")
+                .pet(pet)
+                .vet(vet)
+                .build();
+    }
+
+    public AppointmentResponse toResponse(Appointment entity) {
+        return new AppointmentResponse(
+                entity.getId(),
+                entity.getDataHora(),
+                entity.getMotivo(),
+                entity.getStatus(),
+                entity.getPet().getNome(),
+                entity.getPet().getClient().getNome(),
+                entity.getVet().getNome()
+        );
+    }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\appointment\AppointmentRepository.java ==========
+
+package com.vetlife.api.modules.appointment;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
+    Page<Appointment> findByVetId(Long vetId, Pageable pageable);
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\appointment\AppointmentService.java ==========
+
+package com.vetlife.api.modules.appointment;
+import com.vetlife.api.modules.pet.*;
+import com.vetlife.api.modules.vet.*;
+import com.vetlife.api.modules.finance.*;
+import com.vetlife.api.modules.appointment.dto.*;
+import com.vetlife.api.shared.exception.ResourceNotFoundException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.math.BigDecimal;
+
+@Service @RequiredArgsConstructor
+public class AppointmentService {
+    private final AppointmentRepository appointmentRepository;
+    private final PetRepository petRepository;
+    private final VeterinarianRepository vetRepository;
+    private final FinancialRepository financialRepository;
+    private final AppointmentMapper mapper;
+
+    @Transactional
+    public AppointmentResponse agendar(AppointmentRequest request) {
+        Pet pet = petRepository.findById(request.petId()).orElseThrow(() -> new ResourceNotFoundException("Pet nÃ£o encontrado"));
+        Veterinarian vet = vetRepository.findById(request.vetId()).orElseThrow(() -> new ResourceNotFoundException("Vet nÃ£o encontrado"));
+        
+        Appointment saved = appointmentRepository.save(mapper.toEntity(request, pet, vet));
+
+        // Financeiro: Toda consulta gera uma entrada de R$ 150,00 (Valor Fixo Exemplo)
+        financialRepository.save(FinancialRecord.builder()
+            .descricao("Consulta Pet: " + pet.getNome() + " com " + vet.getNome())
+            .valor(new BigDecimal("150.00"))
+            .tipo("ENTRADA")
+            .build());
+
+        return mapper.toResponse(saved);
+    }
+    @Transactional(readOnly = true)
+    public Page<AppointmentResponse> listar(Pageable pageable) { return appointmentRepository.findAll(pageable).map(mapper::toResponse); }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\appointment\dto\AppointmentRequest.java ==========
+
+package com.vetlife.api.modules.appointment.dto;
+
+import jakarta.validation.constraints.FutureOrPresent;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import java.time.LocalDateTime;
+
+public record AppointmentRequest(
+    @NotNull(message = "Data e hora sÃ£o obrigatÃ³rias")
+    @FutureOrPresent(message = "A consulta nÃ£o pode ser agendada no passado")
+    LocalDateTime dataHora,
+
+    @NotBlank(message = "Motivo da consulta Ã© obrigatÃ³rio")
+    String motivo,
+
+    @NotNull(message = "ID do Pet Ã© obrigatÃ³rio")
+    Long petId,
+
+    @NotNull(message = "ID do VeterinÃ¡rio Ã© obrigatÃ³rio")
+    Long vetId
+) {}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\appointment\dto\AppointmentResponse.java ==========
+
+package com.vetlife.api.modules.appointment.dto;
+import java.time.LocalDateTime;
+
+public record AppointmentResponse(
+    Long id,
+    LocalDateTime dataHora,
+    String motivo,
+    String status,
+    String nomePet,
+    String nomeTutor,
+    String nomeVet
+) {}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\auth\AuthController.java ==========
+
+package com.vetlife.api.modules.auth;
+import com.vetlife.api.modules.auth.dto.AuthDTOs.*;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/v1/auth")
+@RequiredArgsConstructor
+public class AuthController {
+    private final AuthenticationManager authenticationManager;
+    private final UserRepository repository;
+    private final TokenService tokenService;
+    private final PasswordEncoder passwordEncoder;
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest data) {
+        var usernamePassword = new UsernamePasswordAuthenticationToken(data.login(), data.password());
+        var auth = this.authenticationManager.authenticate(usernamePassword);
+        var token = tokenService.generateToken((User) auth.getPrincipal());
+        return ResponseEntity.ok(new LoginResponse(token));
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<Void> register(@RequestBody @Valid RegisterRequest data) {
+        if (this.repository.findByLogin(data.login()) != null) return ResponseEntity.badRequest().build();
+        String encryptedPassword = passwordEncoder.encode(data.password());
+        User newUser = User.builder().login(data.login()).password(encryptedPassword).build();
+        this.repository.save(newUser);
+        return ResponseEntity.ok().build();
+    }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\auth\AuthorizationService.java ==========
+
+package com.vetlife.api.modules.auth;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class AuthorizationService implements UserDetailsService {
+    
+    private final UserRepository repository;
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        UserDetails user = repository.findByLogin(username);
+        if (user == null) {
+            throw new UsernameNotFoundException("UsuÃ¡rio nÃ£o encontrado: " + username);
+        }
+        return user;
+    }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\auth\TokenService.java ==========
+
+package com.vetlife.api.modules.auth;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTCreationException;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import org.springframework.stereotype.Service;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+
+@Service
+public class TokenService {
+    private final String secret = "vetlife-super-secret-key-2026";
+    public String generateToken(User user) {
+        try {
+            Algorithm algorithm = Algorithm.HMAC256(secret);
+            return JWT.create().withIssuer("vetlife-api").withSubject(user.getLogin())
+                    .withExpiresAt(genExpirationDate()).sign(algorithm);
+        } catch (JWTCreationException exception) { throw new RuntimeException("Erro token", exception); }
+    }
+    public String validateToken(String token) {
+        try {
+            Algorithm algorithm = Algorithm.HMAC256(secret);
+            return JWT.require(algorithm).withIssuer("vetlife-api").build().verify(token).getSubject();
+        } catch (JWTVerificationException exception) { return ""; }
+    }
+    private Instant genExpirationDate() { return LocalDateTime.now().plusHours(2).toInstant(ZoneOffset.of("-03:00")); }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\auth\User.java ==========
+
+package com.vetlife.api.modules.auth;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import java.util.Collection;
+import java.util.List;
+
+@Entity
+@Table(name = "usuarios")
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+public class User implements UserDetails {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    @Column(unique = true, nullable = false)
+    private String login;
+    @Column(nullable = false)
+    private String password;
+    @Override public Collection<? extends GrantedAuthority> getAuthorities() { return List.of(new SimpleGrantedAuthority("ROLE_USER")); }
+    @Override public String getUsername() { return login; }
+    @Override public boolean isAccountNonExpired() { return true; }
+    @Override public boolean isAccountNonLocked() { return true; }
+    @Override public boolean isCredentialsNonExpired() { return true; }
+    @Override public boolean isEnabled() { return true; }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\auth\UserRepository.java ==========
+
+package com.vetlife.api.modules.auth;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.security.core.userdetails.UserDetails;
+public interface UserRepository extends JpaRepository<User, Long> {
+    UserDetails findByLogin(String login);
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\auth\dto\AuthDTOs.java ==========
+
+package com.vetlife.api.modules.auth.dto;
+import jakarta.validation.constraints.NotBlank;
+public class AuthDTOs {
+    public record LoginRequest(@NotBlank String login, @NotBlank String password) {}
+    public record RegisterRequest(@NotBlank String login, @NotBlank String password) {}
+    public record LoginResponse(String token) {}
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\client\Client.java ==========
+
+package com.vetlife.api.modules.client;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
+import java.time.OffsetDateTime;
+
+@Entity
+@Table(name = "clientes")
+// Substitui o comando DELETE padrÃ£o do JPA por este UPDATE
+@SQLDelete(sql = "UPDATE clientes SET ativo = false WHERE id = ?")
+// Toda vez que o Hibernate fizer SELECT, ele vai adicionar "WHERE ativo = true"
+@SQLRestriction("ativo = true")
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+public class Client {
+
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, length = 100)
+    private String nome;
+
+    @Column(nullable = false, length = 150, unique = true)
+    private String email;
+
+    @Column(length = 20)
+    private String telefone;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean ativo = true;
+
+    @Column(nullable = false, updatable = false)
+    private OffsetDateTime createdAt;
+
+    private OffsetDateTime updatedAt;
+
+    @PrePersist void onCreate() { 
+        this.createdAt = OffsetDateTime.now(); 
+        this.updatedAt = OffsetDateTime.now(); 
+    }
+    
+    @PreUpdate void onUpdate() { 
+        this.updatedAt = OffsetDateTime.now(); 
+    }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\client\ClientController.java ==========
+
+package com.vetlife.api.modules.client;
+
+import com.vetlife.api.modules.client.dto.ClientRequest;
+import com.vetlife.api.modules.client.dto.ClientResponse;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+@RestController
+@RequestMapping("/api/v1/clients")
+@RequiredArgsConstructor
+public class ClientController {
+
+    private final ClientService service;
+
+    @PostMapping
+    public ResponseEntity<ClientResponse> create(@RequestBody @Valid ClientRequest request) {
+        ClientResponse response = service.create(request);
+        var uri = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}").buildAndExpand(response.id()).toUri();
+        return ResponseEntity.created(uri).body(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<Page<ClientResponse>> list(
+            @PageableDefault(size = 10, sort = "nome") Pageable pageable
+    ) {
+        return ResponseEntity.ok(service.listAll(pageable));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ClientResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(service.findById(id));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        service.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\client\ClientMapper.java ==========
+
+package com.vetlife.api.modules.client;
+
+import com.vetlife.api.modules.client.dto.ClientRequest;
+import com.vetlife.api.modules.client.dto.ClientResponse;
+import org.springframework.stereotype.Component;
+
+@Component
+public class ClientMapper {
+
+    public Client toEntity(ClientRequest dto) {
+        return Client.builder()
+                .nome(dto.nome())
+                .email(dto.email())
+                .telefone(dto.telefone())
+                .build();
+    }
+
+    public ClientResponse toResponse(Client entity) {
+        return new ClientResponse(
+                entity.getId(),
+                entity.getNome(),
+                entity.getEmail(),
+                entity.getTelefone(),
+                entity.getAtivo(),
+                entity.getCreatedAt()
+        );
+    }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\client\ClientRepository.java ==========
+
+package com.vetlife.api.modules.client;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface ClientRepository extends JpaRepository<Client, Long> {
+    
+    boolean existsByEmail(String email);
+    
+    Page<Client> findAll(Pageable pageable);
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\client\ClientService.java ==========
+
+package com.vetlife.api.modules.client;
+
+import com.vetlife.api.modules.client.dto.ClientRequest;
+import com.vetlife.api.modules.client.dto.ClientResponse;
+import com.vetlife.api.shared.exception.BusinessException;
+import com.vetlife.api.shared.exception.ResourceNotFoundException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+public class ClientService {
+
+    private final ClientRepository repository;
+    private final ClientMapper mapper;
+
+    @Transactional
+    public ClientResponse create(ClientRequest request) {
+        if (repository.existsByEmail(request.email())) {
+            throw new BusinessException("Email jÃ¡ cadastrado: " + request.email());
+        }
+        Client saved = repository.save(mapper.toEntity(request));
+        return mapper.toResponse(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ClientResponse> listAll(Pageable pageable) {
+        return repository.findAll(pageable).map(mapper::toResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public ClientResponse findById(Long id) {
+        return repository.findById(id)
+                .map(mapper::toResponse)
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente nÃ£o encontrado ID: " + id));
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        if (!repository.existsById(id)) {
+            throw new ResourceNotFoundException("Cliente nÃ£o encontrado ID: " + id);
+        }
+        repository.deleteById(id);
+    }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\client\dto\ClientRequest.java ==========
+
+package com.vetlife.api.modules.client.dto;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+public record ClientRequest(
+    @NotBlank(message = "Nome Ã© obrigatÃ³rio")
+    @Size(min = 3, max = 100)
+    String nome,
+
+    @NotBlank(message = "Email Ã© obrigatÃ³rio")
+    @Email(message = "Formato de email invÃ¡lido")
+    String email,
+
+    @Size(max = 20)
+    String telefone
+) {}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\client\dto\ClientResponse.java ==========
+
+package com.vetlife.api.modules.client.dto;
+
+import java.time.OffsetDateTime;
+
+public record ClientResponse(
+    Long id,
+    String nome,
+    String email,
+    String telefone,
+    Boolean ativo,
+    OffsetDateTime createdAt
+) {}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\finance\FinancialRecord.java ==========
+
+package com.vetlife.api.modules.finance;
+import jakarta.persistence.*;
+import lombok.*;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+@Entity @Table(name = "lancamentos_financeiros")
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+public class FinancialRecord {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String descricao;
+    private BigDecimal valor;
+    private String tipo; // ENTRADA ou SAIDA
+    private LocalDateTime dataLancamento;
+    @PrePersist void onCreate() { this.dataLancamento = LocalDateTime.now(); }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\finance\FinancialRepository.java ==========
+
+package com.vetlife.api.modules.finance;
+import org.springframework.data.jpa.repository.JpaRepository;
+public interface FinancialRepository extends JpaRepository<FinancialRecord, Long> {}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\pet\Pet.java ==========
+
+package com.vetlife.api.modules.pet;
+
+import com.vetlife.api.modules.client.Client;
+import jakarta.persistence.*;
+import lombok.*;
+import java.time.LocalDate;
+
+@Entity
+@Table(name = "pets")
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+public class Pet {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    @Column(nullable = false, length = 50) private String nome;
+    @Column(nullable = false, length = 30) private String especie;
+    @Column(length = 50) private String raca;
+    private LocalDate dataNascimento;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "client_id", nullable = false)
+    private Client client;
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\pet\PetController.java ==========
+
+package com.vetlife.api.modules.pet;
+import com.vetlife.api.modules.pet.dto.PetRequest;
+import com.vetlife.api.modules.pet.dto.PetResponse;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+@RestController
+@RequestMapping("/api/v1/pets")
+@RequiredArgsConstructor
+public class PetController {
+    private final PetService service;
+    @PostMapping
+    public ResponseEntity<PetResponse> create(@RequestBody @Valid PetRequest request) {
+        PetResponse response = service.create(request);
+        var uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(response.id()).toUri();
+        return ResponseEntity.created(uri).body(response);
+    }
+    @GetMapping
+    public ResponseEntity<Page<PetResponse>> list(@PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(service.listAll(pageable));
+    }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\pet\PetMapper.java ==========
+
+package com.vetlife.api.modules.pet;
+import com.vetlife.api.modules.client.Client;
+import com.vetlife.api.modules.pet.dto.PetRequest;
+import com.vetlife.api.modules.pet.dto.PetResponse;
+import org.springframework.stereotype.Component;
+@Component
+public class PetMapper {
+    public Pet toEntity(PetRequest dto, Client client) {
+        return Pet.builder()
+                .nome(dto.nome()).especie(dto.especie()).raca(dto.raca())
+                .dataNascimento(dto.dataNascimento()).client(client).build();
+    }
+    public PetResponse toResponse(Pet entity) {
+        return new PetResponse(
+                entity.getId(), entity.getNome(), entity.getEspecie(), entity.getRaca(),
+                entity.getDataNascimento(), entity.getClient().getId(), entity.getClient().getNome()
+        );
+    }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\pet\PetRepository.java ==========
+
+package com.vetlife.api.modules.pet;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+@Repository
+public interface PetRepository extends JpaRepository<Pet, Long> {
+    Page<Pet> findByClientId(Long clientId, Pageable pageable);
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\pet\PetService.java ==========
+
+package com.vetlife.api.modules.pet;
+import com.vetlife.api.modules.client.Client;
+import com.vetlife.api.modules.client.ClientRepository;
+import com.vetlife.api.modules.pet.dto.PetRequest;
+import com.vetlife.api.modules.pet.dto.PetResponse;
+import com.vetlife.api.shared.exception.ResourceNotFoundException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+@Service
+@RequiredArgsConstructor
+public class PetService {
+    private final PetRepository petRepository;
+    private final ClientRepository clientRepository;
+    private final PetMapper mapper;
+    @Transactional
+    public PetResponse create(PetRequest request) {
+        Client dono = clientRepository.findById(request.clientId())
+                .orElseThrow(() -> new ResourceNotFoundException("Tutor nÃ£o encontrado com ID: " + request.clientId()));
+        Pet pet = mapper.toEntity(request, dono);
+        Pet saved = petRepository.save(pet);
+        return mapper.toResponse(saved);
+    }
+    @Transactional(readOnly = true)
+    public Page<PetResponse> listAll(Pageable pageable) {
+        return petRepository.findAll(pageable).map(mapper::toResponse);
+    }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\pet\dto\PetRequest.java ==========
+
+package com.vetlife.api.modules.pet.dto;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import java.time.LocalDate;
+public record PetRequest(
+    @NotBlank(message = "Nome do pet Ã© obrigatÃ³rio") String nome,
+    @NotBlank(message = "EspÃ©cie Ã© obrigatÃ³ria") String especie,
+    String raca,
+    LocalDate dataNascimento,
+    @NotNull(message = "ID do tutor Ã© obrigatÃ³rio") Long clientId
+) {}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\pet\dto\PetResponse.java ==========
+
+package com.vetlife.api.modules.pet.dto;
+import java.time.LocalDate;
+public record PetResponse(
+    Long id, String nome, String especie, String raca, LocalDate dataNascimento, Long clientId, String nomeTutor
+) {}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\store\Product.java ==========
+
+package com.vetlife.api.modules.store;
+import jakarta.persistence.*;
+import lombok.*;
+import java.math.BigDecimal;
+@Entity @Table(name = "produtos")
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+public class Product {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String nome;
+    private BigDecimal preco;
+    private Integer estoque;
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\store\ProductRepository.java ==========
+
+package com.vetlife.api.modules.store;
+import org.springframework.data.jpa.repository.JpaRepository;
+public interface ProductRepository extends JpaRepository<Product, Long> {}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\store\StoreController.java ==========
+
+package com.vetlife.api.modules.store;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+@RestController @RequestMapping("/api/v1/store") @RequiredArgsConstructor
+public class StoreController {
+    private final ProductRepository repository;
+    private final StoreService service;
+    @GetMapping public List<Product> list() { return repository.findAll(); }
+    @PostMapping public Product addProduct(@RequestBody Product product) { return repository.save(product); }
+    @PostMapping("/{id}/sell/{quantity}") 
+    public String sell(@PathVariable Long id, @PathVariable Integer quantity) {
+        service.sell(id, quantity);
+        return "Venda realizada e estoque atualizado!";
+    }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\store\StoreService.java ==========
+
+package com.vetlife.api.modules.store;
+import com.vetlife.api.modules.finance.FinancialRecord;
+import com.vetlife.api.modules.finance.FinancialRepository;
+import com.vetlife.api.shared.exception.BusinessException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.math.BigDecimal;
+
+@Service @RequiredArgsConstructor
+public class StoreService {
+    private final ProductRepository productRepository;
+    private final FinancialRepository financialRepository;
+
+    @Transactional
+    public void sell(Long productId, Integer quantity) {
+        Product product = productRepository.findById(productId)
+            .orElseThrow(() -> new BusinessException("Produto nÃ£o encontrado"));
+        if (product.getEstoque() < quantity) throw new BusinessException("Estoque insuficiente");
+        
+        product.setEstoque(product.getEstoque() - quantity);
+        productRepository.save(product);
+
+        // Registro AutomÃ¡tico no Financeiro
+        BigDecimal totalVenda = product.getPreco().multiply(new BigDecimal(quantity));
+        financialRepository.save(FinancialRecord.builder()
+            .descricao("Venda de Produto: " + product.getNome())
+            .valor(totalVenda)
+            .tipo("ENTRADA")
+            .build());
+    }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\system\DashboardController.java ==========
+
+package com.vetlife.api.modules.system;
+
+import com.vetlife.api.modules.client.ClientRepository;
+import com.vetlife.api.modules.pet.PetRepository;
+import com.vetlife.api.modules.finance.FinancialRepository;
+import com.vetlife.api.modules.finance.FinancialRecord;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+import java.math.BigDecimal;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/v1/dashboard")
+@RequiredArgsConstructor
+public class DashboardController {
+
+    private final ClientRepository clientRepo;
+    private final PetRepository petRepo;
+    private final FinancialRepository financeRepo;
+
+    @GetMapping
+    public Map<String, Object> getStats() {
+        BigDecimal totalFaturamento = financeRepo.findAll().stream()
+                .map(FinancialRecord::getValor)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return Map.of(
+            "total_clientes", clientRepo.count(),
+            "total_pets", petRepo.count(),
+            "faturamento_total", totalFaturamento
+        );
+    }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\system\HealthController.java ==========
+
+package com.vetlife.api.modules.system;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+@RestController
+public class HealthController {
+    @GetMapping("/health")
+    public String check() { return "VetLife API - Operacional ðŸŸ¢"; }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\vet\VetController.java ==========
+
+package com.vetlife.api.modules.vet;
+
+import com.vetlife.api.modules.vet.dto.VetRequest;
+import com.vetlife.api.modules.vet.dto.VetResponse;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+@RestController
+@RequestMapping("/api/v1/vets")
+@RequiredArgsConstructor
+public class VetController {
+
+    private final VetService service;
+
+    @PostMapping
+    public ResponseEntity<VetResponse> create(@RequestBody @Valid VetRequest request) {
+        VetResponse response = service.create(request);
+        var uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(response.id()).toUri();
+        return ResponseEntity.created(uri).body(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<Page<VetResponse>> list(@PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(service.listAll(pageable));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<VetResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(service.findById(id));
+    }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\vet\Veterinarian.java ==========
+
+package com.vetlife.api.modules.vet;
+
+import jakarta.persistence.*;
+import lombok.*;
+import java.time.OffsetDateTime;
+
+@Entity
+@Table(name = "veterinarios", indexes = {
+    @Index(name = "idx_vet_crmv", columnList = "crmv", unique = true)
+})
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+public class Veterinarian {
+
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, length = 100)
+    private String nome;
+
+    @Column(nullable = false, length = 20, unique = true)
+    private String crmv;
+
+    @Column(nullable = false, length = 50)
+    private String especialidade; // Ex: CLINICA_GERAL, CIRURGIA
+
+    @Column(nullable = false, length = 150, unique = true)
+    private String email;
+
+    @Column(nullable = false, updatable = false)
+    private OffsetDateTime createdAt;
+
+    @PrePersist void onCreate() { this.createdAt = OffsetDateTime.now(); }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\vet\VeterinarianRepository.java ==========
+
+package com.vetlife.api.modules.vet;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface VeterinarianRepository extends JpaRepository<Veterinarian, Long> {
+    boolean existsByCrmv(String crmv);
+    boolean existsByEmail(String email);
+    Page<Veterinarian> findAll(Pageable pageable);
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\vet\VetMapper.java ==========
+
+package com.vetlife.api.modules.vet;
+
+import com.vetlife.api.modules.vet.dto.VetRequest;
+import com.vetlife.api.modules.vet.dto.VetResponse;
+import org.springframework.stereotype.Component;
+
+@Component
+public class VetMapper {
+
+    public Veterinarian toEntity(VetRequest dto) {
+        return Veterinarian.builder()
+                .nome(dto.nome())
+                .crmv(dto.crmv())
+                .especialidade(dto.especialidade())
+                .email(dto.email())
+                .build();
+    }
+
+    public VetResponse toResponse(Veterinarian entity) {
+        return new VetResponse(
+                entity.getId(),
+                entity.getNome(),
+                entity.getCrmv(),
+                entity.getEspecialidade(),
+                entity.getEmail(),
+                entity.getCreatedAt()
+        );
+    }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\vet\VetService.java ==========
+
+package com.vetlife.api.modules.vet;
+
+import com.vetlife.api.modules.vet.dto.VetRequest;
+import com.vetlife.api.modules.vet.dto.VetResponse;
+import com.vetlife.api.shared.exception.BusinessException;
+import com.vetlife.api.shared.exception.ResourceNotFoundException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+public class VetService {
+
+    private final VeterinarianRepository repository;
+    private final VetMapper mapper;
+
+    @Transactional
+    @CacheEvict(value = "veterinarios", allEntries = true)
+    public VetResponse create(VetRequest request) {
+        if (repository.existsByCrmv(request.crmv())) {
+            throw new BusinessException("JÃ¡ existe um veterinÃ¡rio com este CRMV.");
+        }
+        if (repository.existsByEmail(request.email())) {
+            throw new BusinessException("JÃ¡ existe um veterinÃ¡rio com este E-mail.");
+        }
+        Veterinarian saved = repository.save(mapper.toEntity(request));
+        return mapper.toResponse(saved);
+    }
+
+    @Transactional(readOnly = true)
+    @Cacheable(value = "veterinarios")
+    public Page<VetResponse> listAll(Pageable pageable) {
+        System.out.println(">>> BUSCANDO NO BANCO DE DADOS (POSTGRES) <<<");
+        return repository.findAll(pageable).map(mapper::toResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public VetResponse findById(Long id) {
+        return repository.findById(id)
+                .map(mapper::toResponse)
+                .orElseThrow(() -> new ResourceNotFoundException("VeterinÃ¡rio nÃ£o encontrado ID: " + id));
+    }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\vet\dto\VetRequest.java ==========
+
+package com.vetlife.api.modules.vet.dto;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+public record VetRequest(
+    @NotBlank(message = "Nome Ã© obrigatÃ³rio")
+    String nome,
+
+    @NotBlank(message = "CRMV Ã© obrigatÃ³rio")
+    @Size(max = 20)
+    String crmv,
+
+    @NotBlank(message = "Especialidade Ã© obrigatÃ³ria")
+    String especialidade,
+
+    @NotBlank(message = "Email Ã© obrigatÃ³rio")
+    @Email(message = "Email invÃ¡lido")
+    String email
+) {}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\modules\vet\dto\VetResponse.java ==========
+
+package com.vetlife.api.modules.vet.dto;
+
+import java.time.OffsetDateTime;
+
+public record VetResponse(
+    Long id,
+    String nome,
+    String crmv,
+    String especialidade,
+    String email,
+    OffsetDateTime createdAt
+) {}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\shared\config\LoggingInterceptor.java ==========
+
+package com.vetlife.api.shared.config;
+
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.HandlerInterceptor;
+
+@Component
+@Slf4j
+public class LoggingInterceptor implements HandlerInterceptor {
+
+    @Override
+    public boolean preHandle(HttpServletRequest request, jakarta.servlet.http.HttpServletResponse response, Object handler) {
+        log.info("[AUDITORIA] RequisiÃ§Ã£o Recebida: MÃ©todo [{}] - URI: {}", request.getMethod(), request.getRequestURI());
+        return true;
+    }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\shared\config\OpenApiConfig.java ==========
+
+package com.vetlife.api.shared.config;
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class OpenApiConfig {
+    @Bean
+    public OpenAPI customOpenAPI() {
+        return new OpenAPI()
+                .info(new Info().title("VetLife+ API").version("v1.0.0")
+                        .contact(new Contact().name("Rafael Santana").url("https://github.com/RafaelSantana-Dev")))
+                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
+                .components(new Components().addSecuritySchemes("bearerAuth",
+                        new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT")));
+    }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\shared\config\SecurityConfig.java ==========
+
+package com.vetlife.api.shared.config;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+@Configuration
+@EnableWebSecurity
+@RequiredArgsConstructor
+public class SecurityConfig {
+
+    private final SecurityFilter securityFilter;
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        return http
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/health").permitAll()
+                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/api/v1/dashboard/**").permitAll()
+                        .requestMatchers("/api/v1/adoption/**", "/api/v1/store/**").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
+                .build();
+    }
+
+    @Bean public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception { return config.getAuthenticationManager(); }
+    @Bean public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\shared\config\SecurityFilter.java ==========
+
+package com.vetlife.api.shared.config;
+
+import com.vetlife.api.modules.auth.TokenService;
+import com.vetlife.api.modules.auth.UserRepository;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+
+@Component
+@RequiredArgsConstructor
+public class SecurityFilter extends OncePerRequestFilter {
+
+    private final TokenService tokenService;
+    private final UserRepository userRepository;
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        System.out.println("--- [SECURITY FILTER] Iniciando verificaÃ§Ã£o para: " + request.getRequestURI());
+        
+        var token = this.recoverToken(request);
+        
+        if (token != null) {
+            System.out.println("--- [SECURITY FILTER] Token encontrado! Tentando validar...");
+            try {
+                var login = tokenService.validateToken(token);
+                System.out.println("--- [SECURITY FILTER] Token vÃ¡lido! Login no token: " + login);
+                
+                if (login != null && !login.isEmpty()) {
+                    UserDetails user = userRepository.findByLogin(login);
+                    
+                    if (user != null) {
+                        System.out.println("--- [SECURITY FILTER] UsuÃ¡rio encontrado no banco: " + user.getUsername());
+                        var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                        System.out.println("--- [SECURITY FILTER] AutenticaÃ§Ã£o realizada com SUCESSO!");
+                    } else {
+                        System.out.println("--- [SECURITY FILTER] ERRO: UsuÃ¡rio nÃ£o encontrado no banco de dados.");
+                    }
+                }
+            } catch (Exception e) {
+                System.out.println("--- [SECURITY FILTER] ERRO na validaÃ§Ã£o do token: " + e.getMessage());
+            }
+        } else {
+            System.out.println("--- [SECURITY FILTER] Nenhum token encontrado no Header Authorization.");
+        }
+        
+        filterChain.doFilter(request, response);
+    }
+
+    private String recoverToken(HttpServletRequest request) {
+        var authHeader = request.getHeader("Authorization");
+        if (authHeader == null) return null;
+        return authHeader.replace("Bearer ", "").trim();
+    }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\shared\config\WebConfig.java ==========
+
+package com.vetlife.api.shared.config;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+@RequiredArgsConstructor
+public class WebConfig implements WebMvcConfigurer {
+
+    private final LoggingInterceptor loggingInterceptor;
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(loggingInterceptor)
+                .addPathPatterns("/api/v1/**")
+                .excludePathPatterns("/api/v1/auth/**"); // NÃ£o loga tentativas de login por seguranÃ§a
+    }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\shared\exception\BusinessException.java ==========
+
+package com.vetlife.api.shared.exception;
+
+public class BusinessException extends RuntimeException {
+    public BusinessException(String message) { super(message); }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\shared\exception\GlobalExceptionHandler.java ==========
+
+package com.vetlife.api.shared.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ProblemDetail handleNotFound(ResourceNotFoundException ex) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        pd.setTitle("Recurso nÃ£o encontrado");
+        pd.setType(URI.create("https://vetlife.com/errors/not-found"));
+        return pd;
+    }
+
+    @ExceptionHandler(BusinessException.class)
+    public ProblemDetail handleBusiness(BusinessException ex) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        pd.setTitle("Regra de NegÃ³cio Violada");
+        pd.setType(URI.create("https://vetlife.com/errors/business-rule"));
+        return pd;
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ProblemDetail handleValidation(MethodArgumentNotValidException ex) {
+        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+        pd.setTitle("Erro de ValidaÃ§Ã£o");
+        pd.setDetail("Um ou mais campos estÃ£o invÃ¡lidos.");
+
+        Map<String, String> errors = new HashMap<>();
+        for (FieldError error : ex.getBindingResult().getFieldErrors()) {
+            errors.put(error.getField(), error.getDefaultMessage());
+        }
+        pd.setProperty("errors", errors);
+        return pd;
+    }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\main\java\com\vetlife\api\shared\exception\ResourceNotFoundException.java ==========
+
+package com.vetlife.api.shared.exception;
+
+public class ResourceNotFoundException extends RuntimeException {
+    public ResourceNotFoundException(String message) { super(message); }
+}
+
+
+========== C:\programacao\vetlife+\vetlife-api\src\test\java\com\vetlife\api\modules\client\ClientServiceTest.java ==========
+
+package com.vetlife.api.modules.client;
+
+import com.vetlife.api.modules.client.dto.ClientRequest;
+import com.vetlife.api.modules.client.dto.ClientResponse;
+import com.vetlife.api.shared.exception.BusinessException;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.OffsetDateTime;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class ClientServiceTest {
+
+    @Mock
+    private ClientRepository repository;
+
+    @Mock
+    private ClientMapper mapper;
+
+    @InjectMocks
+    private ClientService service;
+
+    @Test
+    @DisplayName("Deve criar um cliente com sucesso quando o e-mail nÃ£o existir")
+    void create_Success() {
+        // Arrange (PreparaÃ§Ã£o)
+        ClientRequest request = new ClientRequest("Rafael", "rafael@email.com", "11999999999");
+        // ATUALIZADO: Adicionado 'true' para o campo ativo
+        Client entity = new Client(1L, "Rafael", "rafael@email.com", "11999999999", true, OffsetDateTime.now(), null);
+        ClientResponse response = new ClientResponse(1L, "Rafael", "rafael@email.com", "11999999999", true, OffsetDateTime.now());
+
+        // Simulando que o banco diz que o e-mail NÃƒO existe
+        when(repository.existsByEmail("rafael@email.com")).thenReturn(false);
+        
+        // Simulando a conversÃ£o e o salvamento
+        when(mapper.toEntity(request)).thenReturn(entity);
+        when(repository.save(any(Client.class))).thenReturn(entity);
+        when(mapper.toResponse(entity)).thenReturn(response);
+
+        // Act (AÃ§Ã£o)
+        ClientResponse result = service.create(request);
+
+        // Assert (VerificaÃ§Ã£o)
+        assertNotNull(result);
+        assertEquals("Rafael", result.nome());
+        verify(repository, times(1)).save(any(Client.class));
+    }
+
+    @Test
+    @DisplayName("Deve estourar BusinessException ao tentar criar cliente com e-mail jÃ¡ existente")
+    void create_EmailAlreadyExists_ThrowsBusinessException() {
+        // Arrange
+        ClientRequest request = new ClientRequest("Duplicado", "rafael@email.com", "11888888888");
+
+        // Simulando que o banco diz que o e-mail JÃ existe
+        when(repository.existsByEmail("rafael@email.com")).thenReturn(true);
+
+        // Act & Assert (AÃ§Ã£o e VerificaÃ§Ã£o embutida esperando o erro)
+        BusinessException exception = assertThrows(BusinessException.class, () -> {
+            service.create(request);
+        });
+
+        assertEquals("Email jÃ¡ cadastrado: rafael@email.com", exception.getMessage());
+        
+        // Garante que NUNCA tentou salvar no banco
+        verify(repository, never()).save(any(Client.class));
+    }
+}
