@@ -79,18 +79,18 @@ Este projeto não é apenas um CRUD padrão. Ele implementa desafios reais de en
 
 ## 🧪 Tecnologias Utilizadas
 
-* ☕ **Java 21** (Uso de Records)
-* 🌱 **Spring Boot 3.2.3**
-* 🗄️ **Spring Data JPA**
-* 🐘 **PostgreSQL 15** (Banco de dados principal)
-* 🔴 **Redis 7** (Cache de alta performance)
-* 🐳 **Docker / Docker Compose**
-* 📦 **Maven** (com Maven Wrapper)
-* 📑 **Springdoc OpenAPI (Swagger UI)**
-* ⚡ **Lombok**
-* 🔁 **Flyway** (Migrations)
-* 🔒 **Spring Security + JWT (Auth0) + BCrypt**
-* 🧪 **JUnit 5 e Mockito**
+* ☕ **`Java 21`** (Uso de Records)
+* 🌱 **`Spring Boot` 3.2.3**
+* 🗄️ **`Spring Data JPA`**
+* 🐘 **`PostgreSQL 15`** (Banco de dados principal)
+* 🔴 **`Redis 7`** (Cache de alta performance)
+* 🐳 **`Docker / Docker Compose`**
+* 📦 **`Maven** (com Maven Wrapper)`**
+* 📑 **`Springdoc OpenAPI (Swagger UI)`**
+* ⚡ **`Lombok`**
+* 🔁 **`Flyway** (Migrations)`
+* 🔒 **`Spring Security + JWT (Auth0) + BCrypt`**
+* 🧪 **`JUnit 5 e Mockito`**
 
 ---
 
