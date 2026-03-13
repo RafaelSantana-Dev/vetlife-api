@@ -86,7 +86,7 @@ Este projeto não é apenas um CRUD padrão. Ele implementa desafios reais de en
 * 🔴 **Redis 7** (Cache de alta performance)
 * 🐳 **Docker / Docker Compose**
 * 📦 **Maven** (com Maven Wrapper)
-* 📑 **Swagger / OpenAPI 3**
+* 📑 **Springdoc OpenAPI (Swagger UI)**
 * ⚡ **Lombok**
 * 🔁 **Flyway** (Migrations)
 * 🔒 **Spring Security + JWT (Auth0) + BCrypt**
