@@ -56,3 +56,21 @@ api:
 app:
   storage:
     upload-dir: uploads
+  email:
+    enabled: false  # Alterar para true quando configurar SMTP
+
+spring:
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:noreply@vetlife.com}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+        transport:
+          protocol: smtp
