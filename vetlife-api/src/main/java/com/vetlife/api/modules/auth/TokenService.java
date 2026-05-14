@@ -1,4 +1,4 @@
-﻿package com.vetlife.api.modules.auth;
+package com.vetlife.api.modules.auth;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
