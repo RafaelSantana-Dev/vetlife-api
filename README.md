@@ -312,31 +312,6 @@ GET /api/v1/clients?nome=João&email=joao&ativo=true&page=0&size=10
 
 ---
 
-## 🗺️ Roadmap de Melhorias
-
-### ✅ Implementado
-- [x] Sistema de Roles e Permissões (ADMIN, VET, RECEPTIONIST)
-- [x] Auditoria automática de registros
-- [x] Gestão de usuários (ativar/desativar)
-- [x] Controle de acesso baseado em roles
-- [x] **Paginação e Filtros Avançados:** Implementado `Pageable` e `Specification` para busca dinâmica
-- [x] **Testes Automatizados:** Exemplo completo de testes unitários com JUnit 5 e Mockito
-- [x] **Upload de Arquivos:** Sistema para fotos de pets e documentos (JPG, PNG, PDF, DOC, DOCX)
-- [x] **Histórico Médico:** Prontuário eletrônico completo com tipos de registro (consulta, vacina, cirurgia, etc)
-- [x] **Notificações por Email:** Sistema de envio de emails (confirmação, lembretes, boas-vindas)
-- [x] **Sistema de Estoque Avançado:** Gestão completa com alertas de estoque baixo, categorias e movimentações
-- [x] **Relatórios em PDF:** Geração de relatórios financeiros e de consultas em PDF
-- [x] **Agendamento Avançado:** Verificação de conflitos, horários disponíveis e validações inteligentes
-
-### 🚧 Em Desenvolvimento
-
-### 📅 Planejado
-- [ ] **Integração com Pagamentos:** Stripe/PagSeguro/Mercado Pago
-- [ ] **WebSocket:** Notificações em tempo real
-- [ ] **Multi-tenancy:** Suporte para múltiplas clínicas
-
----
-
 ## 🧪 Testes
 
 Para rodar a suíte de testes unitários automatizados:
