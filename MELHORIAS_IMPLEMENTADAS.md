@@ -35,28 +35,87 @@ Response: {
 
 ---
 
+## ✅ 2. PAGINAÇÃO E FILTROS AVANÇADOS
+
+### Implementado:
+- ✅ `Pageable` em todos os endpoints de listagem
+- ✅ `ClientSpecification` para filtros dinâmicos
+- ✅ Ordenação customizável
+- ✅ Filtros por nome, email e status ativo
+
+### Como usar:
+```
+GET /api/v1/clients?nome=João&email=joao&ativo=true&page=0&size=10&sort=nome,asc
+```
+
+---
+
+## ✅ 3. TESTES AUTOMATIZADOS
+
+### Implementado:
+- ✅ Testes unitários para Services com JUnit 5 e Mockito
+- ✅ Exemplo completo em `ClientServiceTest`
+- ✅ Cobertura de casos: create, duplicate email, findById, delete
+
+---
+
+## ✅ 4. UPLOAD DE ARQUIVOS
+
+### Implementado:
+- ✅ Módulo `storage` completo
+- ✅ Upload de fotos de pets (JPG, JPEG, PNG)
+- ✅ Upload de documentos (PDF, DOC, DOCX)
+- ✅ Validação de tipo e tamanho (máximo 5MB)
+- ✅ Download de arquivos
+- ✅ Deleção de arquivos (apenas ADMIN)
+- ✅ Campo `photoPath` na entidade Pet
+- ✅ Migration V5
+
+### Endpoints:
+```
+POST /api/v1/storage/upload/pet-photo
+POST /api/v1/storage/upload/document
+GET /api/v1/storage/download/{category}/{filename}
+DELETE /api/v1/storage/{category}/{filename}
+```
+
+---
+
+## ✅ 5. HISTÓRICO MÉDICO (PRONTUÁRIO ELETRÔNICO)
+
+### Implementado:
+- ✅ Entidade `MedicalRecord` completa
+- ✅ Enum `RecordType` com 7 tipos
+- ✅ Repository com queries customizadas
+- ✅ Service com todas as operações
+- ✅ Controller com permissões por role
+- ✅ DTOs de request e response
+- ✅ Migration V6
+
+### Tipos de Registro:
+- CONSULTA - Consulta de Rotina
+- EMERGENCIA - Atendimento de Emergência
+- CIRURGIA - Procedimento Cirúrgico
+- VACINA - Vacinação
+- EXAME - Exame Laboratorial
+- RETORNO - Consulta de Retorno
+- OUTRO - Outro
+
+### Endpoints:
+```
+POST /api/v1/medical-records (ADMIN, VET)
+GET /api/v1/medical-records/{id}
+GET /api/v1/medical-records/pet/{petId}
+GET /api/v1/medical-records/pet/{petId}/all
+GET /api/v1/medical-records/vet/{vetId}
+GET /api/v1/medical-records/type/{type}
+GET /api/v1/medical-records
+DELETE /api/v1/medical-records/{id} (ADMIN)
+```
+
+---
+
 ## 📋 PRÓXIMAS IMPLEMENTAÇÕES
-
-### 2. PAGINAÇÃO E FILTROS
-- [ ] Adicionar `Pageable` em todos os endpoints de listagem
-- [ ] Criar `Specification` para filtros dinâmicos
-- [ ] Adicionar ordenação customizável
-
-### 3. TESTES AUTOMATIZADOS
-- [ ] Testes unitários para Services
-- [ ] Testes de integração para Controllers
-- [ ] Testes de Repository
-- [ ] Cobertura mínima de 80%
-
-### 4. UPLOAD DE ARQUIVOS
-- [ ] Endpoint para upload de fotos de pets
-- [ ] Armazenamento local ou S3
-- [ ] Validação de tipo e tamanho
-
-### 5. HISTÓRICO MÉDICO
-- [ ] Entidade `MedicalRecord`
-- [ ] Prontuário eletrônico
-- [ ] Histórico de consultas e vacinas
 
 ### 6. NOTIFICAÇÕES
 - [ ] Configuração de email (SMTP)

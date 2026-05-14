@@ -57,6 +57,21 @@ No exato momento em que a consulta é confirmada, o módulo de Atendimento publi
 * Fluxo completo: `Controller` → `Service` → `Mapper` → `Repository` com DTOs de entrada e saída.
 * **Endpoint de adoção:** `PATCH /api/v1/adoption/{id}/adopt` — altera o status do animal para "adotado", com validação de disponibilidade.
 
+### 📁 Módulo de Storage (Upload de Arquivos)
+* **Upload de fotos de pets:** Suporte para JPG, JPEG e PNG (máximo 5MB)
+* **Upload de documentos:** Suporte para PDF, DOC e DOCX (máximo 5MB)
+* **Download de arquivos:** Endpoint para baixar arquivos enviados
+* **Validação automática:** Tipo de arquivo, tamanho e extensões permitidas
+* **Organização por categoria:** Arquivos organizados em pastas (pets, documents)
+
+### 🏥 Módulo de Prontuário Médico
+* **Histórico completo:** Registro de todo histórico médico dos pets
+* **Tipos de registro:** Consulta, Emergência, Cirurgia, Vacina, Exame, Retorno
+* **Informações detalhadas:** Diagnóstico, tratamento, prescrição e observações
+* **Anexos:** Suporte para anexar exames e laudos
+* **Busca avançada:** Por pet, veterinário, tipo de registro
+* **Auditoria:** Data de criação automática de cada registro
+
 ### 💰 Módulo Financeiro e Dashboard
 * Registro centralizado de todo o fluxo de caixa da clínica com `Controller`, `Service`, `Mapper` e DTOs próprios.
 * **Endpoint de lançamentos:** `GET /api/v1/finance` — listagem paginada de todas as entradas e saídas.
@@ -214,6 +229,10 @@ Pronto! O cadeado será fechado e você terá permissão para testar os endpoint
 | Financeiro | ✅ | ❌ | ✅ |
 | Loja | ✅ | ❌ | ✅ |
 | Dashboard | ✅ | ✅ | ✅ |
+| Upload de Arquivos | ✅ | ✅ | ✅ |
+| Prontuário Médico (Criar) | ✅ | ✅ | ❌ |
+| Prontuário Médico (Visualizar) | ✅ | ✅ | ✅ |
+| Deletar Arquivos | ✅ | ❌ | ❌ |
 
 ### 📋 Novos Endpoints de Autenticação
 
@@ -260,12 +279,12 @@ GET /api/v1/clients?nome=João&email=joao&ativo=true&page=0&size=10
 - [x] Auditoria automática de registros
 - [x] Gestão de usuários (ativar/desativar)
 - [x] Controle de acesso baseado em roles
-
-### 🚧 Em Desenvolvimento
 - [x] **Paginação e Filtros Avançados:** Implementado `Pageable` e `Specification` para busca dinâmica
 - [x] **Testes Automatizados:** Exemplo completo de testes unitários com JUnit 5 e Mockito
-- [ ] **Upload de Arquivos:** Sistema para fotos de pets e documentos
-- [ ] **Histórico Médico:** Prontuário eletrônico completo
+- [x] **Upload de Arquivos:** Sistema para fotos de pets e documentos (JPG, PNG, PDF, DOC, DOCX)
+- [x] **Histórico Médico:** Prontuário eletrônico completo com tipos de registro (consulta, vacina, cirurgia, etc)
+
+### 🚧 Em Desenvolvimento
 
 ### 📅 Planejado
 - [ ] **Notificações por Email:** Confirmação e lembretes de consultas
