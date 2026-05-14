@@ -1,5 +1,6 @@
 package com.vetlife.api.shared.exception;
 
+import com.vetlife.api.modules.storage.StorageException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.validation.FieldError;
@@ -27,6 +28,14 @@ public class GlobalExceptionHandler {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
         pd.setTitle("Regra de Negócio Violada");
         pd.setType(URI.create("https://vetlife.com/errors/business-rule"));
+        return pd;
+    }
+
+    @ExceptionHandler(StorageException.class)
+    public ProblemDetail handleStorage(StorageException ex) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        pd.setTitle("Erro no Upload de Arquivo");
+        pd.setType(URI.create("https://vetlife.com/errors/storage"));
         return pd;
     }
 

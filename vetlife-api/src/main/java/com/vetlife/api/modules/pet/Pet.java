@@ -15,6 +15,7 @@ public class Pet {
     @Column(nullable = false, length = 30) private String especie;
     @Column(length = 50) private String raca;
     private LocalDate dataNascimento;
+    @Column(length = 255) private String photoPath;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "client_id", nullable = false)
     private Client client;

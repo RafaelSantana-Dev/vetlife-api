@@ -7,5 +7,6 @@ public record PetRequest(
     @NotBlank(message = "Espécie é obrigatória") String especie,
     String raca,
     LocalDate dataNascimento,
+    String photoPath,
     @NotNull(message = "ID do tutor é obrigatório") Long clientId
 ) {}

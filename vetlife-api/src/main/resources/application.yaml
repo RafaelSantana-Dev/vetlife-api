@@ -4,6 +4,12 @@ spring:
   main:
     allow-bean-definition-overriding: true
     
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 5MB
+      max-request-size: 5MB
+    
   datasource:
     url: jdbc:postgresql://localhost:5432/vetlife_db
     username: vetlife_user
@@ -46,3 +52,7 @@ api:
   security:
     token:
       secret: vetlife-dev-secret-key-2026
+
+app:
+  storage:
+    upload-dir: uploads
