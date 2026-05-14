@@ -18,11 +18,15 @@ public class AppointmentService {
     private final VeterinarianRepository vetRepository;
     private final FinancialRepository financialRepository;
     private final AppointmentMapper mapper;
+    private final AppointmentValidationService validationService;
 
     @Transactional
     public AppointmentResponse agendar(AppointmentRequest request) {
         Pet pet = petRepository.findById(request.petId()).orElseThrow(() -> new ResourceNotFoundException("Pet não encontrado"));
         Veterinarian vet = vetRepository.findById(request.vetId()).orElseThrow(() -> new ResourceNotFoundException("Vet não encontrado"));
+        
+        // Validar agendamento (conflitos, horário comercial, etc)
+        validationService.validateAppointment(request.vetId(), request.dataHora(), null);
         
         Appointment saved = appointmentRepository.save(mapper.toEntity(request, pet, vet));
 
@@ -35,6 +39,39 @@ public class AppointmentService {
 
         return mapper.toResponse(saved);
     }
+    
+    @Transactional
+    public AppointmentResponse update(Long id, AppointmentRequest request) {
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Consulta não encontrada"));
+        
+        Pet pet = petRepository.findById(request.petId())
+                .orElseThrow(() -> new ResourceNotFoundException("Pet não encontrado"));
+        Veterinarian vet = vetRepository.findById(request.vetId())
+                .orElseThrow(() -> new ResourceNotFoundException("Vet não encontrado"));
+        
+        // Validar agendamento excluindo o próprio ID
+        validationService.validateAppointment(request.vetId(), request.dataHora(), id);
+        
+        appointment.setDataHora(request.dataHora());
+        appointment.setMotivo(request.motivo());
+        appointment.setPet(pet);
+        appointment.setVet(vet);
+        
+        Appointment updated = appointmentRepository.save(appointment);
+        return mapper.toResponse(updated);
+    }
+    
+    @Transactional
+    public void cancelar(Long id) {
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Consulta não encontrada"));
+        appointment.setStatus("CANCELADA");
+        appointmentRepository.save(appointment);
+    }
+    
     @Transactional(readOnly = true)
-    public Page<AppointmentResponse> listar(Pageable pageable) { return appointmentRepository.findAll(pageable).map(mapper::toResponse); }
+    public Page<AppointmentResponse> listar(Pageable pageable) { 
+        return appointmentRepository.findAll(pageable).map(mapper::toResponse); 
+    }
 }

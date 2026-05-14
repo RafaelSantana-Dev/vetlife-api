@@ -17,4 +17,14 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     @Query("SELECT a FROM Appointment a WHERE a.dataHora BETWEEN :startDate AND :endDate ORDER BY a.dataHora ASC")
     List<Appointment> findByDataBetween(@Param("startDate") LocalDateTime startDate, 
                                         @Param("endDate") LocalDateTime endDate);
+    
+    @Query("SELECT a FROM Appointment a WHERE a.vet.id = :vetId AND a.dataHora BETWEEN :startWindow AND :endWindow AND a.status != 'CANCELADA'")
+    List<Appointment> findConflictingAppointments(@Param("vetId") Long vetId,
+                                                   @Param("startWindow") LocalDateTime startWindow,
+                                                   @Param("endWindow") LocalDateTime endWindow);
+    
+    @Query("SELECT a FROM Appointment a WHERE a.vet.id = :vetId AND a.dataHora BETWEEN :startOfDay AND :endOfDay AND a.status != 'CANCELADA' ORDER BY a.dataHora ASC")
+    List<Appointment> findByVetIdAndDateRange(@Param("vetId") Long vetId,
+                                               @Param("startOfDay") LocalDateTime startOfDay,
+                                               @Param("endOfDay") LocalDateTime endOfDay);
 }
