@@ -1,5 +1,90 @@
 # 📝 Changelog - VetLife API
 
+## [v2.2.0] - 2026-05-14
+
+### 🎉 Novas Funcionalidades
+
+#### Sistema de Notificações por Email
+- ✅ Envio assíncrono de emails com `@Async`
+- ✅ Email de confirmação de consulta
+- ✅ Email de lembrete de consulta
+- ✅ Email de boas-vindas para novos clientes
+- ✅ Templates personalizados e formatados
+- ✅ Configuração via `application.yaml` (habilitável/desabilitável)
+- ✅ Suporte a SMTP (Gmail, SendGrid, etc)
+
+#### Sistema de Estoque Avançado
+- ✅ Campos adicionais: descrição, categoria, fornecedor, estoque mínimo
+- ✅ Soft delete (campo `ativo`)
+- ✅ Auditoria automática (created_at, updated_at)
+- ✅ Alerta de estoque baixo (endpoint `/low-stock`)
+- ✅ Movimentações de estoque (entrada e saída)
+- ✅ Busca por categoria e nome
+- ✅ DTOs completos (ProductRequest, ProductResponse)
+- ✅ Validações de negócio aprimoradas
+
+### 🔧 Melhorias Técnicas
+- ✅ `@EnableAsync` para processamento assíncrono
+- ✅ Dependência `spring-boot-starter-mail` adicionada
+- ✅ Migration V7 para melhorias na tabela produtos
+- ✅ ProductMapper para conversão de DTOs
+- ✅ Queries customizadas no ProductRepository
+- ✅ Logs estruturados em todos os serviços
+
+### 📚 Documentação
+- ✅ README atualizado com novos módulos
+- ✅ Documentação de configuração de email
+- ✅ Exemplos de uso dos novos endpoints
+
+### 🗄️ Banco de Dados
+```sql
+-- Migration V7
+ALTER TABLE produtos 
+ADD COLUMN descricao VARCHAR(500),
+ADD COLUMN estoque_minimo INTEGER NOT NULL DEFAULT 10,
+ADD COLUMN categoria VARCHAR(50),
+ADD COLUMN fornecedor VARCHAR(50),
+ADD COLUMN ativo BOOLEAN NOT NULL DEFAULT true,
+ADD COLUMN created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW();
+```
+
+### 📋 Novos Endpoints
+
+#### Notificações
+- `POST /api/v1/notifications/test-email` - Testar envio de email (ADMIN)
+- `POST /api/v1/notifications/appointment-confirmation` - Enviar confirmação
+- `POST /api/v1/notifications/appointment-reminder` - Enviar lembrete
+
+#### Loja (Estoque Avançado)
+- `POST /api/v1/store` - Criar produto
+- `GET /api/v1/store/{id}` - Buscar produto por ID
+- `GET /api/v1/store` - Listar produtos (paginado)
+- `GET /api/v1/store/categoria/{categoria}` - Buscar por categoria
+- `GET /api/v1/store/search?nome=` - Buscar por nome
+- `GET /api/v1/store/low-stock` - Produtos com estoque baixo
+- `PUT /api/v1/store/{id}` - Atualizar produto
+- `POST /api/v1/store/{id}/add-stock` - Adicionar estoque
+- `POST /api/v1/store/{id}/remove-stock` - Remover estoque
+- `POST /api/v1/store/{id}/sell/{quantity}` - Vender produto
+- `DELETE /api/v1/store/{id}` - Inativar produto (ADMIN)
+
+### ⚙️ Configuração de Email
+```yaml
+app:
+  email:
+    enabled: false  # Alterar para true quando configurar SMTP
+
+spring:
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+```
+
+---
+
 ## [v2.1.0] - 2026-05-14
 
 ### 🎉 Novas Funcionalidades

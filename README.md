@@ -49,8 +49,13 @@ No exato momento em que a consulta é confirmada, o módulo de Atendimento publi
 * **Agendamento Inteligente e Integração:** Ao agendar uma consulta, o sistema valida os dados e gera automaticamente uma receita (entrada) no Módulo Financeiro.
 
 ### 🛍️ Módulo de Loja (E-commerce)
-* Cadastro de produtos e controle real de estoque.
-* **Processamento de Vendas:** Valida se há estoque suficiente, realiza a baixa automática do produto e registra o faturamento diretamente no Módulo Financeiro.
+* **Gestão completa de produtos:** CRUD com validação e soft delete
+* **Controle de estoque avançado:** Estoque mínimo, alertas de estoque baixo
+* **Categorização:** Organização por categorias e fornecedores
+* **Movimentações de estoque:** Entrada e saída com observações
+* **Busca inteligente:** Por nome, categoria e status
+* **Processamento de Vendas:** Valida estoque, realiza baixa automática e registra no financeiro
+* **Auditoria:** Rastreamento de criação e modificação de produtos
 
 ### 🐾 Módulo de Adoção
 * Plataforma integrada para cadastro de animais disponíveis para adoção.
@@ -71,6 +76,14 @@ No exato momento em que a consulta é confirmada, o módulo de Atendimento publi
 * **Anexos:** Suporte para anexar exames e laudos
 * **Busca avançada:** Por pet, veterinário, tipo de registro
 * **Auditoria:** Data de criação automática de cada registro
+
+### 📧 Módulo de Notificações
+* **Email assíncrono:** Envio de emails em background sem bloquear requisições
+* **Confirmação de consultas:** Email automático ao agendar consulta
+* **Lembretes:** Sistema de lembretes de consultas agendadas
+* **Boas-vindas:** Email de boas-vindas para novos clientes
+* **Configurável:** Sistema pode ser habilitado/desabilitado via configuração
+* **Templates personalizados:** Mensagens formatadas e profissionais
 
 ### 💰 Módulo Financeiro e Dashboard
 * Registro centralizado de todo o fluxo de caixa da clínica com `Controller`, `Service`, `Mapper` e DTOs próprios.
@@ -283,14 +296,14 @@ GET /api/v1/clients?nome=João&email=joao&ativo=true&page=0&size=10
 - [x] **Testes Automatizados:** Exemplo completo de testes unitários com JUnit 5 e Mockito
 - [x] **Upload de Arquivos:** Sistema para fotos de pets e documentos (JPG, PNG, PDF, DOC, DOCX)
 - [x] **Histórico Médico:** Prontuário eletrônico completo com tipos de registro (consulta, vacina, cirurgia, etc)
+- [x] **Notificações por Email:** Sistema de envio de emails (confirmação, lembretes, boas-vindas)
+- [x] **Sistema de Estoque Avançado:** Gestão completa com alertas de estoque baixo, categorias e movimentações
 
 ### 🚧 Em Desenvolvimento
 
 ### 📅 Planejado
-- [ ] **Notificações por Email:** Confirmação e lembretes de consultas
 - [ ] **Relatórios em PDF:** Financeiro, consultas e vendas
 - [ ] **Agendamento Avançado:** Verificação de conflitos e disponibilidade
-- [ ] **Sistema de Estoque:** Alertas de estoque baixo e histórico de movimentações
 - [ ] **Integração com Pagamentos:** Stripe/PagSeguro
 - [ ] **WebSocket:** Notificações em tempo real
 - [ ] **Multi-tenancy:** Suporte para múltiplas clínicas

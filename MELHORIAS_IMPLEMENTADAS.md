@@ -115,14 +115,79 @@ DELETE /api/v1/medical-records/{id} (ADMIN)
 
 ---
 
+## ✅ 6. NOTIFICAÇÕES POR EMAIL
+
+### Implementado:
+- ✅ `EmailService` com envio assíncrono (`@Async`)
+- ✅ Email de confirmação de consulta
+- ✅ Email de lembrete de consulta
+- ✅ Email de boas-vindas
+- ✅ Templates personalizados
+- ✅ Configuração via `application.yaml`
+- ✅ Suporte a SMTP (Gmail, SendGrid, etc)
+- ✅ `@EnableAsync` na aplicação principal
+
+### Endpoints:
+```
+POST /api/v1/notifications/test-email (ADMIN)
+POST /api/v1/notifications/appointment-confirmation
+POST /api/v1/notifications/appointment-reminder
+```
+
+### Configuração:
+```yaml
+app:
+  email:
+    enabled: true
+
+spring:
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: seu-email@gmail.com
+    password: sua-senha-app
+```
+
+---
+
+## ✅ 7. SISTEMA DE ESTOQUE AVANÇADO
+
+### Implementado:
+- ✅ Campos adicionais na entidade Product
+- ✅ Estoque mínimo e alertas de estoque baixo
+- ✅ Categorização e fornecedores
+- ✅ Soft delete (campo `ativo`)
+- ✅ Auditoria automática
+- ✅ Movimentações de estoque (entrada/saída)
+- ✅ Busca por categoria e nome
+- ✅ DTOs completos com validações
+- ✅ ProductMapper
+- ✅ Migration V7
+
+### Campos do Produto:
+- nome, descrição, preço
+- estoque, estoqueMinimo
+- categoria, fornecedor
+- ativo, createdAt, updatedAt
+
+### Endpoints:
+```
+POST /api/v1/store - Criar produto
+GET /api/v1/store/{id} - Buscar por ID
+GET /api/v1/store - Listar (paginado)
+GET /api/v1/store/categoria/{categoria} - Por categoria
+GET /api/v1/store/search?nome= - Buscar por nome
+GET /api/v1/store/low-stock - Estoque baixo
+PUT /api/v1/store/{id} - Atualizar
+POST /api/v1/store/{id}/add-stock - Adicionar estoque
+POST /api/v1/store/{id}/remove-stock - Remover estoque
+POST /api/v1/store/{id}/sell/{quantity} - Vender
+DELETE /api/v1/store/{id} - Inativar (ADMIN)
+```
+
+---
+
 ## 📋 PRÓXIMAS IMPLEMENTAÇÕES
-
-### 6. NOTIFICAÇÕES
-- [ ] Configuração de email (SMTP)
-- [ ] Templates de email
-- [ ] Notificações de consulta
-
-### 7. RELATÓRIOS
 - [ ] Relatório financeiro (PDF)
 - [ ] Relatório de consultas
 - [ ] Exportação para Excel
