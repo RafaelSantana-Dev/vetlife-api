@@ -32,10 +32,26 @@ spring:
     redis:
       host: localhost
       port: 6379
+      
   cache:
     type: redis
     redis:
       time-to-live: 600000
+      
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:noreply@vetlife.com}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+        transport:
+          protocol: smtp
 
 springdoc:
   api-docs:
@@ -58,19 +74,3 @@ app:
     upload-dir: uploads
   email:
     enabled: false  # Alterar para true quando configurar SMTP
-
-spring:
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: ${MAIL_USERNAME:noreply@vetlife.com}
-    password: ${MAIL_PASSWORD:}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-            required: true
-        transport:
-          protocol: smtp
