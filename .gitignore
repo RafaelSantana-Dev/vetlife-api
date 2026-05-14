@@ -26,3 +26,12 @@ replay_pid*
 # Uploads folder
 uploads/
 vetlife-api/uploads/
+
+# Maven build folder
+target/
+vetlife-api/target/
+
+# IDE specific folders
+.vscode/
+.idea/
+*.iml
