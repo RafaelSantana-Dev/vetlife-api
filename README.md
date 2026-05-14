@@ -85,6 +85,21 @@ No exato momento em que a consulta é confirmada, o módulo de Atendimento publi
 * **Configurável:** Sistema pode ser habilitado/desabilitado via configuração
 * **Templates personalizados:** Mensagens formatadas e profissionais
 
+### 📊 Módulo de Relatórios
+* **Relatórios em PDF:** Geração profissional de relatórios com iText
+* **Relatório Financeiro:** Resumo de entradas, saídas e saldo por período
+* **Relatório de Consultas:** Listagem detalhada de consultas realizadas
+* **Formatação profissional:** Tabelas, totalizadores e cabeçalhos
+* **Download direto:** PDFs gerados on-demand e prontos para download
+
+### 📅 Agendamento Avançado
+* **Verificação de conflitos:** Impede agendamentos no mesmo horário
+* **Horário comercial:** Validação de dias úteis e horário de funcionamento (8h-18h)
+* **Intervalos padronizados:** Consultas de 30 em 30 minutos
+* **Antecedência:** Mínimo de 1 hora e máximo de 90 dias
+* **Horários disponíveis:** Endpoint para listar slots livres do veterinário
+* **Cancelamento:** Sistema de cancelamento de consultas
+
 ### 💰 Módulo Financeiro e Dashboard
 * Registro centralizado de todo o fluxo de caixa da clínica com `Controller`, `Service`, `Mapper` e DTOs próprios.
 * **Endpoint de lançamentos:** `GET /api/v1/finance` — listagem paginada de todas as entradas e saídas.
@@ -252,6 +267,18 @@ Pronto! O cadeado será fechado e você terá permissão para testar os endpoint
 - `GET /api/v1/auth/me` - Obter informações do usuário logado
 - `GET /api/v1/auth/users` - Listar todos os usuários (apenas ADMIN)
 - `PATCH /api/v1/auth/users/{id}/toggle` - Ativar/desativar usuário (apenas ADMIN)
+
+### 📊 Endpoints de Relatórios
+
+- `GET /api/v1/reports/financial?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD` - Relatório financeiro em PDF
+- `GET /api/v1/reports/appointments?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD` - Relatório de consultas em PDF
+
+### 📅 Endpoints de Agendamento Avançado
+
+- `POST /api/v1/appointments` - Agendar consulta (com validação de conflitos)
+- `PUT /api/v1/appointments/{id}` - Atualizar consulta
+- `PATCH /api/v1/appointments/{id}/cancel` - Cancelar consulta
+- `GET /api/v1/appointments/available-slots?vetId=X&date=YYYY-MM-DDTHH:mm` - Horários disponíveis
 
 ### 🔍 Paginação e Filtros
 
