@@ -36,6 +36,12 @@ No exato momento em que a consulta é confirmada, o módulo de Atendimento publi
 
 ## ⚙️ Funcionalidades & Integrações (O Núcleo do Negócio)
 
+### 🔐 Módulo de Autenticação e Autorização
+* **Sistema de Roles:** ADMIN, VET e RECEPTIONIST com permissões específicas
+* **Gestão de Usuários:** Endpoints para listar, ativar/desativar usuários (apenas ADMIN)
+* **Auditoria Automática:** Rastreamento de criação e modificação de registros
+* Login e registro seguros com token `JWT` e controle de acesso baseado em roles
+
 ### 🏥 Módulo de Clínica & Consultas
 * **Gestão de Tutores (Clientes):** CRUD completo com técnica de Soft Delete (inativação lógica).
 * **Gestão de Pacientes (Pets):** Vinculados obrigatoriamente aos seus tutores.
@@ -56,9 +62,6 @@ No exato momento em que a consulta é confirmada, o módulo de Atendimento publi
 * **Endpoint de lançamentos:** `GET /api/v1/finance` — listagem paginada de todas as entradas e saídas.
 * **Dashboard otimizado:** `GET /api/v1/dashboard` — retorna total de clientes, pets, faturamento total, total de entradas e total de saídas, calculados diretamente no banco via `JPQL` (sem carregar todos os registros em memória).
 
-### 🔐 Módulo de Autenticação
-* Login e registro seguros. Acesso aos módulos restritos por token `JWT`.
-
 ---
 
 ## 🚀 Diferenciais Técnicos e Boas Práticas
@@ -66,8 +69,10 @@ No exato momento em que a consulta é confirmada, o módulo de Atendimento publi
 Este projeto não é apenas um CRUD padrão. Ele implementa desafios reais de engenharia de software corporativo:
 
 * 🔒 **Segurança Stateless:** Autenticação via `JWT` (Auth0) com senhas hasheadas via `BCrypt`. O secret do JWT é configurado via `application.yaml` (nunca hardcoded no código).
+* 👥 **Controle de Acesso:** Sistema de roles (ADMIN, VET, RECEPTIONIST) com permissões granulares usando `@PreAuthorize`.
+* 📊 **Auditoria Completa:** Rastreamento automático de criação e modificação de registros com `@CreatedDate` e `@LastModifiedDate`.
 * ⚡ **Alta Performance:** Uso de `Redis` para armazenar listas (como a de Veterinários) e reduzir drasticamente a carga no banco de dados.
-* 🛡️ **Confiabilidade de Dados:** Implementação de Soft Delete (`@SQLDelete`).
+* 🛡️ **Confiabilidade de Dados:** Implementação de Soft Delete (`@SQLDelete`) e ativação/desativação de usuários.
 * 🏗️ **Isolamento de Dados:** Uso de `Records` do Java para DTOs imutáveis de entrada e saída.
 * 🚨 **Tratamento de Erros:** Padrão global RFC 7807 (`ProblemDetail`).
 * 🗄️ **Migrações:** Evolução do esquema de banco de dados 100% controlado via `Flyway`.
@@ -183,13 +188,56 @@ A interface do Swagger permite testar todos os endpoints da API diretamente pelo
 **Como acessar as rotas protegidas (Importante):**  
 Para garantir a segurança, quase todas as requisições exigem autenticação. Siga os passos abaixo para liberar o Swagger:
 
-1. Crie uma conta na rota `POST /api/v1/auth/register`.
+1. Crie uma conta na rota `POST /api/v1/auth/register` com uma role:
+```json
+{
+  "login": "admin",
+  "password": "senha123",
+  "role": "ADMIN"
+}
+```
+
 2. Faça o login em `POST /api/v1/auth/login` (usando os mesmos dados).
-3. O servidor retornará um **Token JWT**. Copie apenas o texto do token.
+3. O servidor retornará um **Token JWT** junto com informações do usuário. Copie apenas o texto do token.
 4. Suba ao topo da página do Swagger e clique no botão 🔓 **Authorize** (ícone de cadeado).
 5. Cole o seu token no campo *Value* e clique em **Authorize**.
 
-Pronto! O cadeado será fechado e você terá permissão total para testar os endpoints de Clientes, Pets, Veterinários e Consultas.
+Pronto! O cadeado será fechado e você terá permissão para testar os endpoints conforme sua role.
+
+### 🔐 Permissões por Role
+
+| Endpoint | ADMIN | VET | RECEPTIONIST |
+|----------|-------|-----|--------------|
+| Gestão de Usuários | ✅ | ❌ | ❌ |
+| Consultas | ✅ | ✅ | ✅ |
+| Clientes e Pets | ✅ | ✅ | ✅ |
+| Financeiro | ✅ | ❌ | ✅ |
+| Loja | ✅ | ❌ | ✅ |
+| Dashboard | ✅ | ✅ | ✅ |
+
+### 📋 Novos Endpoints de Autenticação
+
+- `GET /api/v1/auth/me` - Obter informações do usuário logado
+- `GET /api/v1/auth/users` - Listar todos os usuários (apenas ADMIN)
+- `PATCH /api/v1/auth/users/{id}/toggle` - Ativar/desativar usuário (apenas ADMIN)
+
+### 🔍 Paginação e Filtros
+
+Todos os endpoints de listagem suportam paginação e ordenação:
+
+```
+GET /api/v1/clients?page=0&size=10&sort=nome,asc
+```
+
+**Filtros disponíveis para Clientes:**
+```
+GET /api/v1/clients?nome=João&email=joao&ativo=true&page=0&size=10
+```
+
+**Parâmetros de paginação:**
+- `page`: Número da página (padrão: 0)
+- `size`: Tamanho da página (padrão: 10)
+- `sort`: Campo e direção de ordenação (ex: `nome,asc` ou `createdAt,desc`)
 
 ---
 
@@ -202,6 +250,31 @@ Pronto! O cadeado será fechado e você terá permissão total para testar os en
 - 🗑️ **Soft Delete:** Inativação lógica de registros (ex: Tutores) sem deletar os dados do banco.
 - 📑 **Documentação:** Centralizada e interativa com Swagger/OpenAPI.
 - 🧪 **Qualidade:** Testes unitários com `JUnit 5` e `Mockito`.
+
+---
+
+## 🗺️ Roadmap de Melhorias
+
+### ✅ Implementado
+- [x] Sistema de Roles e Permissões (ADMIN, VET, RECEPTIONIST)
+- [x] Auditoria automática de registros
+- [x] Gestão de usuários (ativar/desativar)
+- [x] Controle de acesso baseado em roles
+
+### 🚧 Em Desenvolvimento
+- [x] **Paginação e Filtros Avançados:** Implementado `Pageable` e `Specification` para busca dinâmica
+- [x] **Testes Automatizados:** Exemplo completo de testes unitários com JUnit 5 e Mockito
+- [ ] **Upload de Arquivos:** Sistema para fotos de pets e documentos
+- [ ] **Histórico Médico:** Prontuário eletrônico completo
+
+### 📅 Planejado
+- [ ] **Notificações por Email:** Confirmação e lembretes de consultas
+- [ ] **Relatórios em PDF:** Financeiro, consultas e vendas
+- [ ] **Agendamento Avançado:** Verificação de conflitos e disponibilidade
+- [ ] **Sistema de Estoque:** Alertas de estoque baixo e histórico de movimentações
+- [ ] **Integração com Pagamentos:** Stripe/PagSeguro
+- [ ] **WebSocket:** Notificações em tempo real
+- [ ] **Multi-tenancy:** Suporte para múltiplas clínicas
 
 ---
 
