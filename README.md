@@ -298,13 +298,13 @@ GET /api/v1/clients?nome=João&email=joao&ativo=true&page=0&size=10
 - [x] **Histórico Médico:** Prontuário eletrônico completo com tipos de registro (consulta, vacina, cirurgia, etc)
 - [x] **Notificações por Email:** Sistema de envio de emails (confirmação, lembretes, boas-vindas)
 - [x] **Sistema de Estoque Avançado:** Gestão completa com alertas de estoque baixo, categorias e movimentações
+- [x] **Relatórios em PDF:** Geração de relatórios financeiros e de consultas em PDF
+- [x] **Agendamento Avançado:** Verificação de conflitos, horários disponíveis e validações inteligentes
 
 ### 🚧 Em Desenvolvimento
 
 ### 📅 Planejado
-- [ ] **Relatórios em PDF:** Financeiro, consultas e vendas
-- [ ] **Agendamento Avançado:** Verificação de conflitos e disponibilidade
-- [ ] **Integração com Pagamentos:** Stripe/PagSeguro
+- [ ] **Integração com Pagamentos:** Stripe/PagSeguro/Mercado Pago
 - [ ] **WebSocket:** Notificações em tempo real
 - [ ] **Multi-tenancy:** Suporte para múltiplas clínicas
 
