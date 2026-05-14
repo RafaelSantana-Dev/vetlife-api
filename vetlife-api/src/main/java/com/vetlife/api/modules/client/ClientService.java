@@ -7,6 +7,7 @@ import com.vetlife.api.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +33,14 @@ public class ClientService {
     }
 
     @Transactional(readOnly = true)
+    public Page<ClientResponse> listAll(Pageable pageable, String nome, String email, Boolean ativo) {
+        Specification<Client> spec = Specification.where(ClientSpecification.hasNome(nome))
+                .and(ClientSpecification.hasEmail(email))
+                .and(ClientSpecification.isAtivo(ativo));
+        return repository.findAll(spec, pageable).map(mapper::toResponse);
+    }
+
+    @Transactional(readOnly = true)
     public ClientResponse findById(Long id) {
         return repository.findById(id)
                 .map(mapper::toResponse)
@@ -41,7 +50,7 @@ public class ClientService {
     @Transactional
     public void delete(Long id) {
         if (!repository.existsById(id)) {
-            throw new ResourceNotFoundException("Cliente não encontrado ID: " + id);
+            throw new ResourceNotFoundException("Cliente não encontrado ID: " + id));
         }
         repository.deleteById(id);
     }

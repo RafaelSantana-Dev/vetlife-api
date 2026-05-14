@@ -28,9 +28,12 @@ public class ClientController {
 
     @GetMapping
     public ResponseEntity<Page<ClientResponse>> list(
-            @PageableDefault(size = 10, sort = "nome") Pageable pageable
+            @PageableDefault(size = 10, sort = "nome") Pageable pageable,
+            @RequestParam(required = false) String nome,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) Boolean ativo
     ) {
-        return ResponseEntity.ok(service.listAll(pageable));
+        return ResponseEntity.ok(service.listAll(pageable, nome, email, ativo));
     }
 
     @GetMapping("/{id}")
