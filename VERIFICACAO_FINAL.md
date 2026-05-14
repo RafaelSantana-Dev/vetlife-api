@@ -30,8 +30,10 @@
 - ✅ Exemplos de uso incluídos
 
 ### ✅ 4. Organização de Pastas
-- ✅ Pasta `target/` removida (gerada automaticamente)
-- ✅ `.gitignore` atualizado com `uploads/` e `target/`
+- ✅ Pasta `target/` removida (gerada automaticamente pelo Maven)
+- ✅ Pasta `.vscode/` removida (configurações específicas do editor)
+- ✅ Arquivo `vetlife-api/HELP.md` removido (arquivo padrão do Spring Boot)
+- ✅ `.gitignore` atualizado com `uploads/`, `target/`, `.vscode/` e `.idea/`
 - ✅ Estrutura modular bem organizada
 - ✅ Sem arquivos desnecessários
 - ✅ Scripts auxiliares mantidos (remove-bom.ps1, aplicar-redis.ps1)
@@ -82,7 +84,7 @@
 - **40+ classes** criadas
 
 ### Commits
-- **18 commits** no total
+- **19 commits** no total
 - **Padrão:** feat, fix, docs, chore
 - **100%** sincronizado com GitHub
 
